@@ -63,8 +63,9 @@ module PhotoCook
     def store(resized_photo, source_photo_path, name_prefix)
       dir = File.join File.dirname(source_photo_path), PhotoCook.resize_dir_name
       Dir.mkdir dir unless File.exists?(dir)
-      resized_photo.write File.join(dir, "#{name_prefix}#{File.basename(source_photo_path)}")
-      resized_photo
+      resized_photo_path = File.join(dir, "#{name_prefix}#{File.basename(source_photo_path)}")
+      resized_photo.write resized_photo_path
+      resized_photo_path
     end
 
   end
