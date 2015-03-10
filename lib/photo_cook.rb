@@ -19,6 +19,7 @@ module PhotoCook
 
 end
 
+require 'photo_cook/engine' if defined?(Rails)
 require 'photo_cook/resizer'
 require 'photo_cook/middleware'
 require 'photo_cook/carrierwave'

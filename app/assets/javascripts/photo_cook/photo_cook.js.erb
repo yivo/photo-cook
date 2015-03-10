@@ -1,0 +1,16 @@
+window.PhotoCook = {
+    resizeDirName: <%= PhotoCook.resize_dir_name.to_json %>,
+    slash: '/'
+};
+
+window.PhotoCook.resize = function(path, width, height, crop) {
+    if (!path) { return path; }
+    var index = path.lastIndexOf(PhotoCook.slash);
+    var prefix = width + 'x' + height + '_';
+    if (crop) { prefix += 'crop_'; }
+    return path.slice(0, index + 1)
+            + PhotoCook.resizeDirName
+            + PhotoCook.slash
+            + prefix
+            + path.slice(index + 1);
+};
