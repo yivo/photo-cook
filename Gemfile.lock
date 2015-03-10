@@ -1,0 +1,19 @@
+PATH
+  remote: .
+  specs:
+    photo_cook (1.0.0)
+      mini_magick (~> 4.0)
+      rack (~> 1.5)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    mini_magick (4.1.0)
+    rack (1.5.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  mini_magick
+  photo_cook!
