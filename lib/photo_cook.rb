@@ -11,6 +11,18 @@ module PhotoCook
     @resize_dir_name || 'resized'
   end
 
+  def self.assemble_path(path, width, height, crop = false)
+    File.join PhotoCook.assemble_dir(path), PhotoCook.assemble_name(path, width, height, crop)
+  end
+
+  def self.assemble_dir(path)
+    File.join File.dirname(path), PhotoCook.resize_dir_name
+  end
+
+  def self.assemble_name(path, width, height, crop = false)
+    PhotoCook.assemble_prefix(width, height, crop) + File.basename(path)
+  end
+
   def self.assemble_prefix(width, height, crop = false)
     prefix = "#{width}x#{height}_"
     prefix += 'crop_' if crop

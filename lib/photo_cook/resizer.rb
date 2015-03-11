@@ -20,7 +20,7 @@ module PhotoCook
       # Do nothing if photo is not valid so exceptions will be not thrown
       return unless (photo = open(photo_path)).valid?
       photo.resize "#{width}x#{height}"
-      store photo, photo_path, PhotoCook.assemble_prefix(width, height, false)
+      store photo, PhotoCook.assemble_path(photo_path, width, height, false)
     end
 
     # Resize the photo to fit within the specified dimensions:
@@ -51,7 +51,7 @@ module PhotoCook
         cmd.extent "#{width}x#{height}" if cols != width || rows != height
       end
 
-      store photo, photo_path, PhotoCook.assemble_prefix(width, height, true)
+      store photo, PhotoCook.assemble_path(photo_path, width, height, true)
     end
 
     private
@@ -60,12 +60,11 @@ module PhotoCook
       ::MiniMagick::Image.open photo_path
     end
 
-    def store(resized_photo, source_photo_path, name_prefix)
-      dir = File.join File.dirname(source_photo_path), PhotoCook.resize_dir_name
+    def store(resized_photo, path_to_store_at)
+      dir = File.dirname path_to_store_at
       Dir.mkdir dir unless File.exists?(dir)
-      resized_photo_path = File.join(dir, "#{name_prefix}#{File.basename(source_photo_path)}")
-      resized_photo.write resized_photo_path
-      resized_photo_path
+      resized_photo.write path_to_store_at
+      resized_photo
     end
 
   end
