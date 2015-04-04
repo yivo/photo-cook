@@ -24,7 +24,6 @@ module PhotoCook
     end
 
     # Resize the photo to fit within the specified dimensions:
-    # - the original aspect ratio will be kept
     # - new dimensions will be the same as specified
     # - the photo will be cropped if necessary
     def resize_to_fill(photo_path, width, height)
