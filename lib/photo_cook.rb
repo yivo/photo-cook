@@ -1,14 +1,14 @@
 module PhotoCook
 
-  mattr_writer :public_dir_name
-  mattr_writer :resize_dir_name
+  mattr_writer :public_dirname
+  mattr_writer :resize_dirname
 
-  def self.public_dir_name
-    @public_dir_name || 'public'
+  def self.public_dirname
+    @public_dirname || 'public'
   end
 
-  def self.resize_dir_name
-    @resize_dir_name || 'resized'
+  def self.resize_dirname
+    @resize_dirname || 'resized'
   end
 
   def self.assemble_path(path, width, height, crop = false)
@@ -16,7 +16,7 @@ module PhotoCook
   end
 
   def self.assemble_dir(path)
-    File.join File.dirname(path), PhotoCook.resize_dir_name
+    File.join File.dirname(path), PhotoCook.resize_dirname
   end
 
   def self.assemble_name(path, width, height, crop = false)

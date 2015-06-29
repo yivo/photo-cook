@@ -16,11 +16,11 @@ module PhotoCook
 
       return default unless
 
-        # Lets ensure that directory name matches PhotoCook.resize_dir_name
-        # dir_name = /uploads/photos/resized
-        # File::SEPARATOR + PhotoCook.resize_dir_name = /resized
-        # dir_name.chomp! = /uploads/photos
-        (dir_name = File.dirname(uri)).chomp!(File::SEPARATOR + PhotoCook.resize_dir_name) &&
+        # Lets ensure that directory name matches PhotoCook.resize_dirname
+        # dirname = /uploads/photos/resized
+        # File::SEPARATOR + PhotoCook.resize_dirname = /resized
+        # dirname.chomp! = /uploads/photos
+        (dirname = File.dirname(uri)).chomp!(File::SEPARATOR + PhotoCook.resize_dirname) &&
 
         # Lets ensure that photo_name starts with resize command
         # photo_name = 640x320_crop_car.png
@@ -33,7 +33,7 @@ module PhotoCook
       # At this point we are sure that this request is targeting to resize photo
 
       # Lets assemble path of the source photo
-      source = assemble_source_photo_path dir_name, photo_name
+      source = assemble_source_photo_path dirname, photo_name
 
       # Do nothing if source photo not exists
       return default unless File.exists?(source)
@@ -52,13 +52,13 @@ module PhotoCook
 
     attr_reader :app, :root, :env
 
-    def assemble_source_photo_path(dir_name, photo_name)
-      @source_photo_path ||= URI.decode File.join(root, PhotoCook.public_dir_name, dir_name, photo_name)
+    def assemble_source_photo_path(dirname, photo_name)
+      @source_photo_path ||= URI.decode File.join(root, PhotoCook.public_dirname, dirname, photo_name)
     end
 
     def requested_file_exists?
       # /my_awesome_project_root/public/uploads/photos/resized/640x320_crop_car.png
-      File.exists? File.join(root, PhotoCook.public_dir_name, uri)
+      File.exists? File.join(root, PhotoCook.public_dirname, uri)
     end
 
     def uri
