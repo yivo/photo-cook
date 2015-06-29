@@ -4,6 +4,7 @@ module PhotoCook
 
     CENTER_GRAVITY = 'Center'
     TRANSPARENT_BACKGROUND = 'rgba(255,255,255,0.0)'
+    PHOTO_QUALITY = 100
 
     def resize(photo_path, width, height, crop = false)
       if crop
@@ -19,7 +20,10 @@ module PhotoCook
     def resize_to_fit(photo_path, width, height)
       # Do nothing if photo is not valid so exceptions will be not thrown
       return unless (photo = open(photo_path)).valid?
-      photo.resize "#{width}x#{height}"
+      photo.combine_options do |cmd|
+        cmd.quality PHOTO_QUALITY
+        cmd.resize "#{width}x#{height}"
+      end
       store photo, PhotoCook.assemble_path(photo_path, width, height, false)
     end
 
@@ -47,6 +51,7 @@ module PhotoCook
         end
         cmd.gravity CENTER_GRAVITY
         cmd.background TRANSPARENT_BACKGROUND
+        cmd.quality PHOTO_QUALITY
         cmd.extent "#{width}x#{height}" if cols != width || rows != height
       end
 

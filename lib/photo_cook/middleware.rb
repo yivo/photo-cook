@@ -53,7 +53,7 @@ module PhotoCook
     attr_reader :app, :root, :env
 
     def assemble_source_photo_path(dirname, photo_name)
-      @source_photo_path ||= URI.decode File.join(root, PhotoCook.public_dirname, dirname, photo_name)
+      URI.decode File.join(root, PhotoCook.public_dirname, dirname, photo_name)
     end
 
     def requested_file_exists?
