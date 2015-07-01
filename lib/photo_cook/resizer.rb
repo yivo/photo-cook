@@ -19,7 +19,7 @@ module PhotoCook
     # - new dimensions will be not larger then the specified
     def resize_to_fit(photo_path, width, height)
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless (photo = open(photo_path)).valid?
+      return unless (photo = open(photo_path)).try(:valid?)
       photo.combine_options do |cmd|
         cmd.quality PHOTO_QUALITY
         cmd.resize "#{width}x#{height}"
@@ -32,7 +32,7 @@ module PhotoCook
     # - the photo will be cropped if necessary
     def resize_to_fill(photo_path, width, height)
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless (photo = open(photo_path)).valid?
+      return unless (photo = open(photo_path)).try(:valid?)
 
       cols, rows = photo[:dimensions]
       photo.combine_options do |cmd|
@@ -61,7 +61,11 @@ module PhotoCook
     private
 
     def open(photo_path)
-      ::MiniMagick::Image.open photo_path
+      begin
+        ::MiniMagick::Image.open(photo_path)
+      rescue
+        nil
+      end
     end
 
     def store(resized_photo, path_to_store_at)
