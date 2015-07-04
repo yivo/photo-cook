@@ -9,7 +9,7 @@ window.PhotoCook = {
             var ratio = window.devicePixelRatio;
 
             // If no ratio found check if screen is retina
-            // and is so return 2x ratio
+            // and if so return 2x ratio
             if (ratio == null && typeof window.matchMedia === 'function') {
                 if (window.matchMedia(mediaQuery).matches) {
                     ratio = 2;
