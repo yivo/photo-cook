@@ -1,7 +1,7 @@
 require File.expand_path('../lib/photo_cook/version', __FILE__)
 
 Gem::Specification.new do |s|
-  s.name        = 'photo_cook'
+  s.name        = 'photo-cook'
   s.version     = PhotoCook::VERSION
   s.authors     = ['Yaroslav Konoplov']
   s.email       = ['the.yivo@gmail.com']
