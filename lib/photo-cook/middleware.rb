@@ -46,8 +46,13 @@ module PhotoCook
       # Resizer will store photo in resize directory
       photo = resizer.resize source_path, command[:width].to_i, command[:height].to_i, !!command[:crop]
 
-      # Return control to Rack::Sendfile which will find resized photo and send it to client!
-      photo ? default_actions(env) : Rack::File.new(File.join(@root, PhotoCook.public_dirname)).call(env)
+      if photo
+        status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dirname)).call(env)
+        response = Rack::Response.new(body, status, headers)
+        response.finish
+      else
+        default_actions(env)
+      end
     end
 
     private
