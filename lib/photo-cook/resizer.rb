@@ -24,6 +24,7 @@ module PhotoCook
         cmd.quality PHOTO_QUALITY
         cmd.resize "#{width}x#{height}"
       end
+
       store photo, PhotoCook.assemble_path(photo_path, width, height, false)
     end
 
@@ -62,7 +63,10 @@ module PhotoCook
 
     def open(photo_path)
       begin
-        ::MiniMagick::Image.open(photo_path)
+        # MiniMagick::Image.open creates a temporary file for us and protects original
+        photo = MagickPhoto.open(photo_path)
+        photo.source_path = photo_path
+        photo
       rescue
         nil
       end
@@ -72,6 +76,7 @@ module PhotoCook
       dir = File.dirname path_to_store_at
       Dir.mkdir dir unless File.exists?(dir)
       resized_photo.write path_to_store_at
+      resized_photo.resized_path = path_to_store_at
       resized_photo
     end
 

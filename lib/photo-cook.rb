@@ -11,6 +11,10 @@ module PhotoCook
     @resize_dirname || 'resized'
   end
 
+  def self.resize(*args)
+    assemble_path(*args)
+  end
+
   def self.assemble_path(path, width, height, crop = false)
     File.join PhotoCook.assemble_dir(path), PhotoCook.assemble_name(path, width, height, crop)
   end
@@ -35,3 +39,4 @@ require 'photo-cook/engine' if defined?(Rails)
 require 'photo-cook/resizer'
 require 'photo-cook/middleware'
 require 'photo-cook/carrierwave'
+require 'photo-cook/magick-photo'

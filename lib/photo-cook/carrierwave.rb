@@ -1,9 +1,8 @@
 module PhotoCook
-  class CarrierWave
+  module CarrierWave
 
-    def resize(width, height, crop = false)
-      prefix = PhotoCook.assemble_prefix width, height, crop
-      File.join File.dirname(url), PhotoCook.resize_dirname, "#{prefix}#{File.basename(url)}"
+    def resize(*args)
+      PhotoCook.resize(url, *args)
     end
 
   end
