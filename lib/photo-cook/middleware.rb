@@ -47,6 +47,8 @@ module PhotoCook
       photo = resizer.resize source_path, command[:width].to_i, command[:height].to_i, !!command[:crop]
 
       if photo
+        # http://rubylogs.com/writing-rails-middleware/
+        # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
         status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dirname)).call(env)
         response = Rack::Response.new(body, status, headers)
         response.finish
