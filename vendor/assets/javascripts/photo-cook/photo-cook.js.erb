@@ -1,6 +1,6 @@
 window.PhotoCook = {
-    resizeDirname: function() {
-        return <%= PhotoCook.resize_dirname.to_json %>;
+    resizeDir: function() {
+        return <%= PhotoCook.resize_dir.to_json %>;
     },
 
     pixelRatio: (function() {
@@ -18,21 +18,21 @@ window.PhotoCook = {
 
             return ratio != null ? ratio : 1;
         };
-
     })()
-
 };
 
 window.PhotoCook.resize = function(path, width, height, crop) {
-    if (path == null || width == null || height == null) { return path; }
+    if (path == null) { return path; }
 
     var ratio = PhotoCook.pixelRatio();
-    var prefix = Math.round(width * ratio) + 'x' + Math.round(height * ratio) + '_';
-    if (crop) { prefix += 'crop_'; }
+    var prefix = (width ? Math.round(width * ratio) : '')
+        + 'x'
+        + (height ? Math.round(height * ratio) : '')
+        + (crop ? 'crop_' : '_');
 
     var index = path.lastIndexOf('/');
     return path.slice(0, index + 1)
-            + PhotoCook.resizeDirname()
+            + PhotoCook.resizeDir()
             + '/'
             + prefix
             + path.slice(index + 1);

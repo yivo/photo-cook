@@ -1,3 +1,6 @@
+# Resize algorithms from
+# https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/rmagick.rb
+
 module PhotoCook
   class Resizer
     include Singleton
@@ -20,9 +23,10 @@ module PhotoCook
     def resize_to_fit(photo_path, width, height)
       # Do nothing if photo is not valid so exceptions will be not thrown
       return unless (photo = open(photo_path)).try(:valid?)
+
       photo.combine_options do |cmd|
         cmd.quality PHOTO_QUALITY
-        cmd.resize "#{width}x#{height}"
+        cmd.resize "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}"
       end
 
       store photo, PhotoCook.assemble_path(photo_path, width, height, false)
@@ -80,5 +84,8 @@ module PhotoCook
       resized_photo
     end
 
+    def normalize_dimensions(w, h)
+      [w.to_i == 0 ? nil : w.to_i, h.to_i == 0 ? nil : h.to_i]
+    end
   end
 end

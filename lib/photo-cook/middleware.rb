@@ -10,35 +10,32 @@ module PhotoCook
     end
 
     # The example will be concentrated around uri:
-    # /uploads/photos/resized/640x320_crop_car.png
+    # /uploads/photos/resized/640x320crop_car.png
     def call(env)
       uri = extract_uri(env)
 
       return default_actions(env) unless
 
-        # Lets ensure that directory name matches PhotoCook.resize_dirname
-        # dirname = /uploads/photos/resized
+        # Lets ensure that directory matches PhotoCook.resize_dir
+        # dir = /uploads/photos/resized
         # File::SEPARATOR + PhotoCook.resize_dirname = /resized
-        # dirname.chomp! = /uploads/photos
-        (dirname = File.dirname(uri)).chomp!(File::SEPARATOR + PhotoCook.resize_dirname) &&
+        # dir.chomp! = /uploads/photos
+        (dir = File.dirname(uri)).chomp!(File::SEPARATOR + PhotoCook.resize_dir) &&
 
         # Lets ensure that photo_name starts with resize command
-        # photo_name = 640x320_crop_car.png
+        # photo_name = 640x320crop_car.png
         # photo_name.sub! = car.png
         (photo_name = File.basename(uri)).sub!(command_regex, '')
 
       return default_actions(env) if requested_file_exists?(uri)
 
-      # Regex match: 640x320_crop_
+      # Regex match: 640x320crop_
       command = Regexp.last_match
 
       # At this point we are sure that this request is targeting to resize photo
 
       # Lets assemble path of the source photo
-      source_path = assemble_source_path(dirname, photo_name)
-
-      # Do nothing if source photo not exists
-      # return default unless File.exists?(source) || File.readable?(source)
+      source_path = assemble_source_path(dir, photo_name)
 
       # Finally resize photo
       resizer = PhotoCook::Resizer.instance
@@ -49,7 +46,7 @@ module PhotoCook
       if photo
         # http://rubylogs.com/writing-rails-middleware/
         # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
-        status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dirname)).call(env)
+        status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dir)).call(env)
         response = Rack::Response.new(body, status, headers)
         response.finish
       else
@@ -59,13 +56,13 @@ module PhotoCook
 
     private
 
-    def assemble_source_path(dirname, photo_name)
-      URI.decode File.join(@root, PhotoCook.public_dirname, dirname, photo_name)
+    def assemble_source_path(dir, photo_name)
+      URI.decode File.join(@root, PhotoCook.public_dir, dir, photo_name)
     end
 
     def requested_file_exists?(uri)
-      # /my_awesome_project_root/public/uploads/photos/resized/640x320_crop_car.png
-      File.exists? File.join(@root, PhotoCook.public_dirname, uri)
+      # /my_awesome_project_root/public/uploads/photos/resized/640x320crop_car.png
+      File.exists? File.join(@root, PhotoCook.public_dir, uri)
     end
 
     def extract_uri(env)
@@ -76,10 +73,17 @@ module PhotoCook
       @app.call(env)
     end
 
+    # Proportional support
+    # http://stackoverflow.com/questions/7200909/imagemagick-convert-to-fixed-width-proportional-height
     def command_regex
-      @r_command ||= %r{
-        \A (?<width>\d+) x (?<height>\d+) _ (?<crop>crop_)?
-      }x
+      unless @r_command
+        w = /(?<width>\d+)/
+        h = /(?<height>\d+)/
+        @r_command = %r{
+          \A (?:(?:#{w}x#{h}) | (?:#{w}x) | (?:x#{h})) (?<crop>crop)? _
+        }x
+      end
+      @r_command
     end
 
   end
