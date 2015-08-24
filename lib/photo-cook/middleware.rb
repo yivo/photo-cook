@@ -10,7 +10,7 @@ module PhotoCook
     end
 
     # The example will be concentrated around uri:
-    # /uploads/photos/resized/640x320crop_car.png
+    # /uploads/photos/resized/car_640x320crop.png
     def call(env)
       uri = extract_uri(env)
 
@@ -18,24 +18,26 @@ module PhotoCook
 
         # Lets ensure that directory matches PhotoCook.resize_dir
         # dir = /uploads/photos/resized
-        # File::SEPARATOR + PhotoCook.resize_dirname = /resized
+        # File::SEPARATOR + PhotoCook.resize_dir = /resized
         # dir.chomp! = /uploads/photos
         (dir = File.dirname(uri)).chomp!(File::SEPARATOR + PhotoCook.resize_dir) &&
 
-        # Lets ensure that photo_name starts with resize command
-        # photo_name = 640x320crop_car.png
-        # photo_name.sub! = car.png
-        (photo_name = File.basename(uri)).sub!(command_regex, '')
+        # Lets ensure that photo_basename ends with resize command
+        # photo_name = car_640x320crop.png
+        # photo_basename = car_640x320crop
+        # photo_basename.sub! = car.png
+        (photo_name = File.basename(uri)) &&
+        (photo_basename = File.basename(photo_name, '.*')).sub!(command_regex, '')
 
       return default_actions(env) if requested_file_exists?(uri)
 
-      # Regex match: 640x320crop_
+      # Regex match: _640x320crop
       command = Regexp.last_match
 
       # At this point we are sure that this request is targeting to resize photo
 
       # Lets assemble path of the source photo
-      source_path = assemble_source_path(dir, photo_name)
+      source_path = assemble_source_path(dir, photo_basename + File.extname(photo_name))
 
       # Finally resize photo
       resizer = PhotoCook::Resizer.instance
@@ -61,7 +63,7 @@ module PhotoCook
     end
 
     def requested_file_exists?(uri)
-      # /my_awesome_project_root/public/uploads/photos/resized/640x320crop_car.png
+      # /my_awesome_project_root/public/uploads/photos/resized/car_640x320crop.png
       File.exists? File.join(@root, PhotoCook.public_dir, uri)
     end
 
@@ -80,11 +82,10 @@ module PhotoCook
         w = /(?<width>\d+)/
         h = /(?<height>\d+)/
         @r_command = %r{
-          \A (?:(?:#{w}x#{h}) | (?:#{w}x) | (?:x#{h})) (?<crop>crop)? _
+          _ (?:(?:#{w}x#{h}) | (?:#{w}x) | (?:x#{h})) (?<crop>crop)? \z
         }x
       end
       @r_command
     end
-
   end
 end

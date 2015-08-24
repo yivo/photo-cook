@@ -24,12 +24,12 @@ module PhotoCook
   end
 
   def self.assemble_name(path, width, height, crop = false)
-    PhotoCook.assemble_prefix(width, height, crop) + File.basename(path)
+    File.basename(path, '.*') + PhotoCook.assemble_command(width, height, crop) + File.extname(path)
   end
 
-  def self.assemble_prefix(width, height, crop = false)
-    prefix = "#{width == 0 ? '' : width}x#{height == 0 ? '' : height}"
-    prefix + (crop ? 'crop_' : '_')
+  def self.assemble_command(width, height, crop = false)
+    prefix = "_#{width == 0 ? '' : width}x#{height == 0 ? '' : height}"
+    prefix + (crop ? 'crop' : '')
   end
 
 end

@@ -25,15 +25,25 @@ window.PhotoCook.resize = function(path, width, height, crop) {
     if (path == null) { return path; }
 
     var ratio = PhotoCook.pixelRatio();
-    var prefix = (width ? Math.round(width * ratio) : '')
+    var command = '_' + (width ? Math.round(width * ratio) : '')
         + 'x'
         + (height ? Math.round(height * ratio) : '')
-        + (crop ? 'crop_' : '_');
+        + (crop ? 'crop' : '');
 
-    var index = path.lastIndexOf('/');
-    return path.slice(0, index + 1)
+    var directory = path.slice(0, Math.max(path.lastIndexOf('/'), 0));
+
+    var index = path.lastIndexOf('.');
+    var extension = index >= 0 ? path.slice(index) : '';
+
+    var basename = path.slice(
+        directory ? directory.length + 1 : 0,
+        extension ? 0 - extension.length : path.length
+    );
+
+    return (directory ? directory + '/' : directory)
             + PhotoCook.resizeDir()
             + '/'
-            + prefix
-            + path.slice(index + 1);
+            + basename
+            + command
+            + extension;
 };
