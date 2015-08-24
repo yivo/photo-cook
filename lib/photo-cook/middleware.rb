@@ -10,7 +10,7 @@ module PhotoCook
     end
 
     # The example will be concentrated around uri:
-    # /uploads/photos/resized/car_640x320crop.png
+    # /uploads/photos/resized/car-640x320crop.png
     def call(env)
       uri = extract_uri(env)
 
@@ -23,8 +23,8 @@ module PhotoCook
         (dir = File.dirname(uri)).chomp!(File::SEPARATOR + PhotoCook.resize_dir) &&
 
         # Lets ensure that photo_basename ends with resize command
-        # photo_name = car_640x320crop.png
-        # photo_basename = car_640x320crop
+        # photo_name = car-640x320crop.png
+        # photo_basename = car-640x320crop
         # photo_basename.sub! = car.png
         (photo_name = File.basename(uri)) &&
         (photo_basename = File.basename(photo_name, '.*')).sub!(command_regex, '')
@@ -63,7 +63,7 @@ module PhotoCook
     end
 
     def requested_file_exists?(uri)
-      # /my_awesome_project_root/public/uploads/photos/resized/car_640x320crop.png
+      # /my_awesome_project_root/public/uploads/photos/resized/car-640x320crop.png
       File.exists? File.join(@root, PhotoCook.public_dir, uri)
     end
 
@@ -82,7 +82,7 @@ module PhotoCook
         w = /(?<width>\d+)/
         h = /(?<height>\d+)/
         @r_command = %r{
-          _ (?:(?:#{w}x#{h}) | (?:#{w}x) | (?:x#{h})) (?<crop>crop)? \z
+          \- (?:(?:#{w}x#{h}) | (?:#{w}x) | (?:x#{h})) (?<crop>crop)? \z
         }x
       end
       @r_command

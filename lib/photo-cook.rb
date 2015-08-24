@@ -28,7 +28,7 @@ module PhotoCook
   end
 
   def self.assemble_command(width, height, crop = false)
-    prefix = "_#{width == 0 ? '' : width}x#{height == 0 ? '' : height}"
+    prefix = "-#{width == 0 ? '' : width}x#{height == 0 ? '' : height}"
     prefix + (crop ? 'crop' : '')
   end
 

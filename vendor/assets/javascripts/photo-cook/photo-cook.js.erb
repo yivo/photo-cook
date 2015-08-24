@@ -25,7 +25,7 @@ window.PhotoCook.resize = function(path, width, height, crop) {
     if (path == null) { return path; }
 
     var ratio = PhotoCook.pixelRatio();
-    var command = '_' + (width ? Math.round(width * ratio) : '')
+    var command = '-' + (width ? Math.round(width * ratio) : '')
         + 'x'
         + (height ? Math.round(height * ratio) : '')
         + (crop ? 'crop' : '');
