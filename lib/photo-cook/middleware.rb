@@ -46,6 +46,8 @@ module PhotoCook
       photo = resizer.resize source_path, command[:width].to_i, command[:height].to_i, !!command[:crop]
 
       if photo
+        log(photo, source_path, uri, command) if defined?(Rails)
+
         # http://rubylogs.com/writing-rails-middleware/
         # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
         status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dir)).call(env)
@@ -86,6 +88,20 @@ module PhotoCook
         }x
       end
       @r_command
+    end
+
+    def log(photo, source_path, resized_path, command)
+      w     = command[:width].to_i
+      h     = command[:height].to_i
+      crop  = !!command[:crop]
+      Rails.logger.info %{
+        [PhotoCook] Resized photo.
+        Source file: "#{source_path}".
+        Resized file: "#{resized_path}".
+        Width: #{w == 0 ? 'auto': "#{w}px"}.
+        Height: #{h == 0 ? 'auto': "#{h}px"}.
+        Crop: #{crop ? 'yes' : 'no'}.
+      }
     end
   end
 end
