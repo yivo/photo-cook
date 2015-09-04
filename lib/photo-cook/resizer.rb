@@ -1,6 +1,8 @@
 # Resize algorithms from
 # https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/rmagick.rb
 
+require 'mini_magick'
+
 module PhotoCook
   class Resizer
     include Singleton
