@@ -1,3 +1,4 @@
+# encoding: utf-8
 require File.expand_path('../lib/photo-cook/version', __FILE__)
 
 Gem::Specification.new do |s|
@@ -10,9 +11,9 @@ Gem::Specification.new do |s|
   s.description     = 'This is a simple solution for photo resizing.'
   s.license         = 'MIT'
 
+  s.executables     = `git ls-files -z -- bin/*`.split("\x0").map{ |f| File.basename(f) }
   s.files           = `git ls-files -z`.split("\x0")
-  s.executables     = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  s.test_files      = spec.files.grep(%r{^(test|spec|features)/})
+  s.test_files      = `git ls-files -z -- {test,spec,features}/*`.split("\x0")
   s.require_paths   = ['lib']
 
   s.add_dependency 'rack', '~> 1.5'
