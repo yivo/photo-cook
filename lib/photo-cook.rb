@@ -16,22 +16,22 @@ module PhotoCook
   end
 
   def self.assemble_path(path, width, height, crop = false)
-    File.join PhotoCook.assemble_dir(path), PhotoCook.assemble_name(path, width, height, crop)
+    File.join(assemble_dir(path), assemble_name(path, width, height, crop))
   end
 
   def self.assemble_dir(path)
-    File.join File.dirname(path), PhotoCook.resize_dir
+    File.join(File.dirname(path), resize_dir)
   end
 
   def self.assemble_name(path, width, height, crop = false)
-    File.basename(path, '.*') + PhotoCook.assemble_command(width, height, crop) + File.extname(path)
+    File.basename(path, '.*') + assemble_command(width, height, crop) + File.extname(path)
   end
 
   def self.assemble_command(width, height, crop = false)
-    prefix = "-#{width == 0 ? '' : width}x#{height == 0 ? '' : height}"
+    width, height = width.to_i, height.to_i
+    prefix = "-#{width == 0 ? nil : width}x#{height == 0 ? nil : height}"
     prefix + (crop ? 'crop' : '')
   end
-
 end
 
 require 'photo-cook/engine' if defined?(Rails)
