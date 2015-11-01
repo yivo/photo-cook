@@ -7,11 +7,15 @@ module PhotoCook
     CENTER_GRAVITY          = 'Center'.freeze
     TRANSPARENT_BACKGROUND  = 'rgba(255,255,255,0.0)'.freeze
 
-    def resize(photo_path, width, height, crop = false)
+    def resize(photo_path, width, height, options = {})
+      width, height = PhotoCook.parse_and_check_dimensions(width, height)
+      crop, ratio   = PhotoCook.parse_and_check_options(options)
+      width, height = PhotoCook.multiply_and_round_dimensions(ratio, width, height)
+
       if crop
-        resize_to_fill photo_path, width, height
+        resize_to_fill(photo_path, width, height)
       else
-        resize_to_fit photo_path, width, height
+        resize_to_fit(photo_path, width, height)
       end
     end
 
@@ -25,12 +29,12 @@ module PhotoCook
       # Do nothing if photo is not valid so exceptions will be not thrown
       return unless (photo = open(photo_path)).try(:valid?)
 
-      width, height = parse_dimensions(width, height)
-      store_path    = PhotoCook.assemble_path(photo_path, width, height, false)
+      width, height = PhotoCook.parse_and_check_dimensions(width, height)
+      store_path    = PhotoCook.assemble_path(photo_path, width, height, crop: false, pixel_ratio: 1.0)
 
       if width > 0 || height > 0
         photo.combine_options do |cmd|
-          cmd.resize "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}>"
+          cmd.resize "#{PhotoCook.literal_dimensions(width, height)}>"
         end
       end
 
@@ -47,9 +51,9 @@ module PhotoCook
       # Do nothing if photo is not valid so exceptions will be not thrown
       return unless (photo = open(photo_path)).try(:valid?)
 
-      width, height = parse_dimensions(width, height)
+      width, height = PhotoCook.parse_and_check_dimensions(width, height)
       cols,  rows   = photo[:dimensions]
-      store_path    = PhotoCook.assemble_path(photo_path, width, height, true)
+      store_path    = PhotoCook.assemble_path(photo_path, width, height, crop: true, pixel_ratio: 1.0)
 
       if width > 0 || height > 0
         photo.combine_options do |cmd|
@@ -69,7 +73,7 @@ module PhotoCook
           cmd.gravity CENTER_GRAVITY
           cmd.background TRANSPARENT_BACKGROUND
           if cols != width || rows != height
-            cmd.extent "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}>"
+            cmd.extent "#{PhotoCook.literal_dimensions(width, height)}>"
           end
         end
       end
@@ -91,22 +95,12 @@ module PhotoCook
     end
 
     def store(resized_photo, path_to_store_at)
-      dir = File.dirname path_to_store_at
-      Dir.mkdir dir unless File.exists?(dir)
-      resized_photo.write path_to_store_at
+      dir = File.dirname(path_to_store_at)
+      Dir.mkdir(dir) unless File.exists?(dir)
+
+      resized_photo.write(path_to_store_at)
       resized_photo.resized_path = path_to_store_at
       resized_photo
-    end
-
-    def parse_dimensions(width, height)
-      width   = width == :auto ? 0 : width.to_i
-      height  = height == :auto ? 0 : height.to_i
-      check_dimensions!(width, height)
-      [width, height]
-    end
-
-    def check_dimensions!(width, height)
-      raise ArgumentError, 'Expected positive numbers ' if width < 0 || height < 0
     end
   end
 end

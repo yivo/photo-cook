@@ -27,7 +27,7 @@ module PhotoCook
         # photo_basename = car-640x320crop
         # photo_basename.sub! = car.png
         (photo_name = File.basename(uri)) &&
-        (photo_basename = File.basename(photo_name, '.*')).sub!(command_regex, '')
+        (photo_basename = File.basename(photo_name, '.*')).sub!(PhotoCook.command_regex, '')
 
       return default_actions(env) if requested_file_exists?(uri)
 
@@ -39,20 +39,17 @@ module PhotoCook
       # Lets assemble path of the source photo
       source_path = assemble_source_path(dir, photo_basename + File.extname(photo_name))
 
-      # Finally resize photo
+      # Get resized and prepare options
       resizer = PhotoCook::Resizer.instance
+      resize_options = { crop: !!command[:crop], pixel_ratio: 1.0 }
 
-      # Resizer will store photo in resize directory
-      photo = resizer.resize source_path, command[:width].to_i, command[:height].to_i, !!command[:crop]
+      # Finally resize photo
+      # Resized photo will appear in resize directory
+      photo = resizer.resize(source_path, command[:width].to_i, command[:height].to_i, resize_options)
 
       if photo
-        log(photo, source_path, uri, command) if defined?(Rails)
-
-        # http://rubylogs.com/writing-rails-middleware/
-        # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
-        status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dir)).call(env)
-        response = Rack::Response.new(body, status, headers)
-        response.finish
+        PhotoCook.on_resize(photo, command)
+        response_with_file(env)
       else
         default_actions(env)
       end
@@ -70,38 +67,20 @@ module PhotoCook
     end
 
     def extract_uri(env)
-      Rack::Utils.unescape(env['PATH_INFO'])
+      # Remove query string and fragment
+      Rack::Utils.unescape(env['PATH_INFO'].gsub(/[\?#].*\z/, ''))
     end
 
     def default_actions(env)
       @app.call(env)
     end
 
-    # Proportional support
-    # http://stackoverflow.com/questions/7200909/imagemagick-convert-to-fixed-width-proportional-height
-    def command_regex
-      unless @r_command
-        w = /(?<width>\d+)/
-        h = /(?<height>\d+)/
-        @r_command = %r{
-          \- (?:(?:#{w}x#{h}) | (?:#{w}x) | (?:x#{h})) (?<crop>crop)? \z
-        }x
-      end
-      @r_command
-    end
-
-    def log(photo, source_path, resized_path, command)
-      w     = command[:width].to_i
-      h     = command[:height].to_i
-      crop  = !!command[:crop]
-      Rails.logger.info %{
-        [PhotoCook] Resized photo.
-        Source file: "#{source_path}".
-        Resized file: "#{resized_path}".
-        Width: #{w == 0 ? 'auto': "#{w}px"}.
-        Height: #{h == 0 ? 'auto': "#{h}px"}.
-        Crop: #{crop ? 'yes' : 'no'}.
-      }
+    def response_with_file(env)
+      # http://rubylogs.com/writing-rails-middleware/
+      # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
+      status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dir)).call(env)
+      response = Rack::Response.new(body, status, headers)
+      response.finish
     end
   end
 end
