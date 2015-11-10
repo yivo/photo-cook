@@ -1,0 +1,114 @@
+(function(root) {
+  var PhotoCook = {
+    resizeDir: <%= PhotoCook.resize_dir.to_json %>,
+
+    commandRegex: /\-(?:(?:\d+x\d+)|(?:\d+x)|(?:x\d+))(?:crop)?$/,
+
+    initialize: function() {
+      PhotoCook.persistPixelRatio();
+    },
+
+    pixelRatio: (function () {
+      // https://gist.github.com/marcedwards/3446599
+      var mediaQuery = [
+          '(-webkit-min-device-pixel-ratio: 1.3)',
+          '(-o-min-device-pixel-ratio: 13/10)',
+          'min-resolution: 120dpi'
+      ].join(', ');
+
+      var ratio = window.devicePixelRatio;
+
+      // If no ratio found check if screen is retina
+      // and if so return 2x ratio
+      if (ratio == null && typeof window.matchMedia === 'function') {
+        if (window.matchMedia(mediaQuery).matches) {
+          ratio = 2;
+        }
+      }
+
+      return parseFloat(ratio == null ? 1 : ratio);
+    })(),
+
+    persistPixelRatio: function() {
+        var date = new Date();
+
+        // Expires in 1 year
+        date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
+        var expires = 'expires=' + date.toUTCString();
+        document.cookie = "PhotoCookPixelRatio=" + PhotoCook.pixelRatio + '; ' + expires;
+    },
+
+    resize: function (path, width, height, options) {
+      var crop  = typeof options === 'boolean' ? !!options : !!(options && options.crop);
+      var ratio = Math.max(0, options && options.pixelRatio) || PhotoCook.pixelRatio;
+
+      var command = '-' + (width && width !== 'auto' ? Math.round(width * ratio) : '')
+                        + 'x'
+                        + (height && height !== 'auto' ? Math.round(height * ratio) : '')
+                        + (crop ? 'crop' : '');
+
+      var index;       index = path.lastIndexOf('.');
+      if (index < 0) { index = path.lastIndexOf('?'); }
+      if (index < 0) { index = path.lastIndexOf('#'); }
+
+      var leftPart = path.slice(0, Math.max(path.lastIndexOf('/'), 0));
+      var rightPart = index >= 0 ? path.slice(index) : '';
+
+      var basename = path.slice(
+          leftPart ? leftPart.length + 1 : 0,
+          rightPart ? 0 - rightPart.length : path.length
+      );
+
+      return (leftPart ? leftPart + '/' : leftPart)
+              + PhotoCook.resizeDir
+              + '/'
+              + basename
+              + command
+              + rightPart;
+    },
+
+    strip: function (path) {
+      var token = PhotoCook.resizeDir + '/';
+      var leftIndex = path.lastIndexOf(token);
+      if (leftIndex < 0 || (leftIndex > 0 && path[leftIndex - 1] !== '/')) {
+        return path;
+      }
+
+      var rightIndex;       rightIndex = path.lastIndexOf('.');
+      if (rightIndex < 0) { rightIndex = path.lastIndexOf('?'); }
+      if (rightIndex < 0) { rightIndex = path.lastIndexOf('#'); }
+
+      var basename = path.slice(
+          leftIndex + token.length,
+          rightIndex >= 0 ? 0 - path.length + rightIndex : path.length
+      );
+
+      var oldLength = basename.length;
+
+      basename = basename.replace(PhotoCook.commandRegex, '');
+
+      if (oldLength === basename.length) {
+        return path;
+      }
+
+      var leftPart = path.slice(0, leftIndex);
+      var rightPart = rightIndex >= 0 ? path.slice(rightIndex) : '';
+
+      return leftPart + basename + rightPart;
+    },
+
+    uriRegex: /^[-a-z]+:\/\/|^(?:cid|data):|^\/\//i,
+
+    // Returns true if given URL can produce request to PhotoCook middleware on server
+    isServableURL: function(url) {
+      // By default check that URL is relative
+      return !PhotoCook.uriRegex.test(url);
+    }
+  };
+
+  root.PhotoCook = PhotoCook;
+})(this);
+
+PhotoCook.initialize();
+
+// navigator.cookieEnabled

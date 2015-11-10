@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    photo-cook (1.0.1)
+    photo-cook (1.0.2)
       mini_magick (~> 4.0)
       rack (~> 1.5)
 
