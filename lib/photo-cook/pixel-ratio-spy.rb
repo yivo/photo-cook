@@ -1,5 +1,5 @@
 module PhotoCook
-  module CookiePixelRatio
+  module PixelRatioSpy
     extend ActiveSupport::Concern
 
     included do

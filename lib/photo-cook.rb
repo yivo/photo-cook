@@ -6,7 +6,7 @@ end
 
 if PhotoCook.rails?
   require 'photo-cook/engine'
-  require 'photo-cook/cookie-pixel-ratio'
+  require 'photo-cook/pixel-ratio-spy'
 end
 
 require 'photo-cook/carrierwave'
