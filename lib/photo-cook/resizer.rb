@@ -1,5 +1,3 @@
-require 'mini_magick'
-
 module PhotoCook
   class Resizer
     include Singleton
@@ -7,15 +5,11 @@ module PhotoCook
     CENTER_GRAVITY          = 'Center'.freeze
     TRANSPARENT_BACKGROUND  = 'rgba(255,255,255,0.0)'.freeze
 
-    def resize(photo_path, width, height, options = {})
-      width, height = PhotoCook.parse_and_check_dimensions(width, height)
-      crop, ratio   = PhotoCook.parse_and_check_options(options)
-      width, height = PhotoCook.multiply_and_round_dimensions(ratio, width, height)
-
+    def resize(photo_path, width, height, pixel_ratio = 1.0, crop = false)
       if crop
-        resize_to_fill(photo_path, width, height)
+        resize_to_fill(photo_path, width, height, pixel_ratio)
       else
-        resize_to_fit(photo_path, width, height)
+        resize_to_fit(photo_path, width, height, pixel_ratio)
       end
     end
 
@@ -24,19 +18,16 @@ module PhotoCook
     # - new dimensions will be not larger then the specified
     #
     # https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/mini_magick.rb#L131
-    def resize_to_fit(photo_path, width, height)
+    def resize_to_fit(photo_path, width, height, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless (photo = open(photo_path)).try(:valid?)
+      return unless photo = open(photo_path) && photo.valid?
 
-      width, height = PhotoCook.parse_and_check_dimensions(width, height)
-      store_path    = PhotoCook.assemble_path(photo_path, width, height, crop: false, pixel_ratio: 1.0)
+      store_path = assemble_store_path(photo_path, width, height, crop: false, pixel_ratio: pixel_ratio)
+      width      = (width  * pixel_ratio).round
+      height     = (height * pixel_ratio).round
 
-      if width > 0 || height > 0
-        photo.combine_options do |cmd|
-          cmd.resize "#{PhotoCook.literal_dimensions(width, height)}>"
-        end
-      end
+      photo.combine_options { |cmd| cmd.resize "#{literal_dimensions(width, height)}>" }
 
       store(photo, store_path)
     end
@@ -46,35 +37,41 @@ module PhotoCook
     # - the photo will be cropped if necessary
     #
     # https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/mini_magick.rb#L176
-    def resize_to_fill(photo_path, width, height)
+    def resize_to_fill(photo_path, width, height, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless (photo = open(photo_path)).try(:valid?)
+      return unless photo = open(photo_path) && photo.valid?
 
-      width, height = PhotoCook.parse_and_check_dimensions(width, height)
-      cols,  rows   = photo[:dimensions]
-      store_path    = PhotoCook.assemble_path(photo_path, width, height, crop: true, pixel_ratio: 1.0)
+      store_path = assemble_store_path(photo_path, width, height, crop: true, pixel_ratio: pixel_ratio)
+      cols, rows = photo[:dimensions]
+      mwidth     = (width  * pixel_ratio).round
+      mheight    = (height * pixel_ratio).round
 
-      if width > 0 || height > 0
-        photo.combine_options do |cmd|
-          if width != cols || height != rows
-            scale_x = width / cols.to_f
-            scale_y = height / rows.to_f
-            if scale_x >= scale_y
-              cols = (scale_x * (cols + 0.5)).round
-              rows = (scale_x * (rows + 0.5)).round
-              cmd.resize "#{cols}>"
-            else
-              cols = (scale_y * (cols + 0.5)).round
-              rows = (scale_y * (rows + 0.5)).round
-              cmd.resize "x#{rows}>"
-            end
+      # TODO
+      # Original dimensions are 1000x800. You want 640x640@1x. You will get 640x640
+      # Original dimensions are 1000x800. You want 640x640@2x. You will get 800x800
+      # Original dimensions are 1000x800. You want 640x640@3x. You will get 800x800
+      # Original dimensions are 1000x800. You want 1280x1280@1x. You will get ?
+      # Original dimensions are 1000x800. You want 1000x1280@1x. You will get ?
+
+      photo.combine_options do |cmd|
+        if width != cols || height != rows
+          scale_x = width / cols.to_f
+          scale_y = height / rows.to_f
+          if scale_x >= scale_y
+            cols = (scale_x * (cols + 0.5)).round
+            rows = (scale_x * (rows + 0.5)).round
+            cmd.resize "#{cols}>"
+          else
+            cols = (scale_y * (cols + 0.5)).round
+            rows = (scale_y * (rows + 0.5)).round
+            cmd.resize "x#{rows}>"
           end
-          cmd.gravity CENTER_GRAVITY
-          cmd.background TRANSPARENT_BACKGROUND
-          if cols != width || rows != height
-            cmd.extent "#{PhotoCook.literal_dimensions(width, height)}>"
-          end
+        end
+        cmd.gravity CENTER_GRAVITY
+        cmd.background TRANSPARENT_BACKGROUND
+        if cols != width || rows != height
+          cmd.extent "#{literal_dimensions(width, height)}>"
         end
       end
 
@@ -96,11 +93,19 @@ module PhotoCook
 
     def store(resized_photo, path_to_store_at)
       dir = File.dirname(path_to_store_at)
-      Dir.mkdir(dir) unless File.exists?(dir)
+      FileUtils.mkdir_p(dir) unless File.exists?(dir)
 
       resized_photo.write(path_to_store_at)
       resized_photo.resized_path = path_to_store_at
       resized_photo
+    end
+
+    def literal_dimensions(width, height)
+      "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}"
+    end
+
+    def assemble_store_path(path, width, height, options)
+      PhotoCook.assemble_store_path(path, width, height, options)
     end
   end
 end
