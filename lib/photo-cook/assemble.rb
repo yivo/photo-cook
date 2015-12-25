@@ -5,7 +5,7 @@ module PhotoCook
     # NOTE: This method performs no validation
     def assemble_uri(uri, width, height, options = {})
       ('/' if uri.start_with?('/')) +
-        File.join(resize_dir, File.dirname(uri),
+        File.join(cache_dir, File.dirname(uri),
                   assemble_command(width, height, options), File.basename(uri))
     end
 
@@ -14,7 +14,7 @@ module PhotoCook
     def assemble_store_path(path, width, height, options = {})
       rootless = path.split(File.join(root, public_dir)).second
       File.join root, public_dir,
-                resize_dir, File.dirname(rootless),
+                cache_dir, File.dirname(rootless),
                 assemble_command(width, height, options), File.basename(path)
     end
 
