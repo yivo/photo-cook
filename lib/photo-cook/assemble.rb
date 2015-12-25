@@ -1,43 +1,34 @@
 module PhotoCook
   module Assemble
-    mattr_writer :public_dir
-    mattr_writer :resize_dir
 
-    def public_dir
-      @public_dir || 'public'
+    # Edit URI so it will point to PhotoCook::Middleware
+    # NOTE: This method performs no validation
+    def assemble_uri(uri, width, height, options = {})
+      ('/' if uri.start_with?('/')) +
+        File.join(resize_dir, File.dirname(uri),
+                  assemble_command(width, height, options), File.basename(uri))
     end
 
-    def resize_dir
-      @resize_dir || 'resized'
+    # Edit path so it will point to place where resized photo stored
+    # NOTE: This method performs no validation
+    def assemble_store_path(path, width, height, options = {})
+      rootless = path.split(File.join(root, public_dir)).second
+      File.join root, public_dir,
+                resize_dir, File.dirname(rootless),
+                assemble_command(width, height, options), File.basename(path)
     end
 
-    def assemble_path(path, width, height, options = {})
-      File.join(assemble_dir(path), assemble_name(path, width, height, options))
+    def resize(uri, width, height, options = {})
+      # TODO Validate args
+      assemble_uri(uri, width, height, options)
     end
 
-    def assemble_dir(path)
-      File.join(File.dirname(path), resize_dir)
+    def hresize(uri, width, options = {})
+      resize(uri, width, :auto, options)
     end
 
-    def assemble_name(path, width, height, options = {})
-      File.basename(path, '.*') + assemble_command(width, height, options) + File.extname(path)
-    end
-
-    def assemble_command(width, height, options = {})
-      width, height = PhotoCook.parse_and_check_dimensions(width, height)
-      crop, ratio   = PhotoCook.parse_and_check_options(options)
-      width, height = PhotoCook.multiply_and_round_dimensions(ratio, width, height)
-      "-#{PhotoCook.literal_dimensions(width, height)}#{'crop' if crop}"
-    end
-
-    alias resize assemble_path
-
-    def hresize(path, width, options = {})
-      assemble_path(path, width, :auto, options)
-    end
-
-    def vresize(path, height, options = {})
-      assemble_path(path, :auto, height, options)
+    def vresize(uri, height, options = {})
+      resize(uri, :auto, height, options)
     end
   end
   extend Assemble
