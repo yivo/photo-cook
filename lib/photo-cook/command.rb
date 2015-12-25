@@ -23,7 +23,7 @@ module PhotoCook
       "width:#{  width  == 0 ? 'auto' : width}&" +
       "height:#{ height == 0 ? 'auto' : height}&" +
       "crop:#{   crop ? '1' : '0'}&" +
-      "pixel-ratio:#{pixel_ratio.ceil}"
+      "pixel_ratio:#{pixel_ratio.ceil}"
     end
   end
   extend Command
