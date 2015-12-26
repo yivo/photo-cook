@@ -7,23 +7,20 @@ module PhotoCook
     # http://dpi.lv/
     # http://www.canbike.org/CSSpixels/
     def command_regex
-      unless @command_regex
-        @command_regex = %r{
-          width:       (?<width>      auto|\d+{1,5}) &
-          height:      (?<height>     auto|\d{1,5}) &
-          crop:        (?<crop>       true|false) &
-          pixel-ratio: (?<pixel_ratio>[1234])
+      @command_regex ||= %r{
+          width:       (?<width>      auto|\d{1,4}) &
+          height:      (?<height>     auto|\d{1,4}) &
+          crop:        (?<crop>       [10]) &
+          pixel_ratio: (?<pixel_ratio>[1234])
         }x
-      end
-      @command_regex
     end
 
     # NOTE: This method performs no validation
     def assemble_command(width, height, pixel_ratio, crop)
-      "width:#{  width  == 0 ? 'auto' : width}&" +
-      "height:#{ height == 0 ? 'auto' : height}&" +
-      "crop:#{   crop ? '1' : '0'}&" +
-      "pixel_ratio:#{pixel_ratio.ceil}"
+      "width=#{  width  == 0 ? 'auto' : width}&" +
+      "height=#{ height == 0 ? 'auto' : height}&" +
+      "crop=#{   crop ? '1' : '0'}&" +
+      "pixel_ratio=#{pixel_ratio.ceil}"
     end
   end
   extend Command
