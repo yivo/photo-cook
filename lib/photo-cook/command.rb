@@ -10,8 +10,8 @@ module PhotoCook
       @command_regex ||= %r{
           width=       (?<width>      auto|\d{1,4}) &
           height=      (?<height>     auto|\d{1,4}) &
-          crop=        (?<crop>       yes|no) &
-          pixel_ratio= (?<pixel_ratio>[1234])
+          pixel_ratio= (?<pixel_ratio>[1234]) &
+          crop=        (?<crop>       yes|no)
         }x
     end
 
@@ -19,8 +19,8 @@ module PhotoCook
     def assemble_command(width, height, pixel_ratio, crop)
       "width=#{  width  == 0 ? 'auto' : width}&" +
       "height=#{ height == 0 ? 'auto' : height}&" +
-      "crop=#{   bool_to_crop(crop)}&" +
-      "pixel_ratio=#{pixel_ratio.ceil}"
+      "pixel_ratio=#{pixel_ratio.ceil}&" +
+      "crop=#{   bool_to_crop(crop)}&"
     end
 
     def crop_to_bool(crop)

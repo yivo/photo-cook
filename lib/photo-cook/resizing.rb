@@ -6,11 +6,17 @@ module PhotoCook
     #
     # NOTE: This method will perform validation
     def resize_photo(path, width, height, options = {})
+      started           = Time.now
+
       width, height     = parse_and_check_dimensions(width, height)
       pixel_ratio, crop = open_options(options)
                                                       # Explicit     # Default
-      pixel_ratio       = parse_and_check_pixel_ratio(pixel_ratio || 1)
-      Resizer.instance.resize(path, width, height, unify_pixel_ratio(pixel_ratio), !!crop)
+      pixel_ratio       = unify_pixel_ratio(parse_and_check_pixel_ratio(pixel_ratio || 1))
+      photo             = Resizer.instance.resize(path, width, height, pixel_ratio, !!crop)
+
+      finished          = Time.now
+      log_resize(photo, width, height, pixel_ratio, !!crop, (finished - started) * 1000.0)
+      photo
     end
 
     # Builds URI for resizing:
