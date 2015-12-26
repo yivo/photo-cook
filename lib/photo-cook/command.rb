@@ -8,10 +8,10 @@ module PhotoCook
     # http://www.canbike.org/CSSpixels/
     def command_regex
       @command_regex ||= %r{
-          width:       (?<width>      auto|\d{1,4}) &
-          height:      (?<height>     auto|\d{1,4}) &
-          crop:        (?<crop>       [10]) &
-          pixel_ratio: (?<pixel_ratio>[1234])
+          width=       (?<width>      auto|\d{1,4}) &
+          height=      (?<height>     auto|\d{1,4}) &
+          crop=        (?<crop>       yes|no) &
+          pixel_ratio= (?<pixel_ratio>[1234])
         }x
     end
 
@@ -19,8 +19,16 @@ module PhotoCook
     def assemble_command(width, height, pixel_ratio, crop)
       "width=#{  width  == 0 ? 'auto' : width}&" +
       "height=#{ height == 0 ? 'auto' : height}&" +
-      "crop=#{   crop ? '1' : '0'}&" +
+      "crop=#{   bool_to_crop(crop)}&" +
       "pixel_ratio=#{pixel_ratio.ceil}"
+    end
+
+    def crop_to_bool(crop)
+      crop == 'yes'
+    end
+
+    def bool_to_crop(crop)
+      crop ? 'yes' : 'no'
     end
   end
   extend Command

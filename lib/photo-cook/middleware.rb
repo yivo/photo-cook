@@ -28,7 +28,7 @@ module PhotoCook
 
         # Check if uri has valid resize command.
         #   uri.split('/')[-2] => width:auto&height:640&crop:true&pixel_ratio:1
-        nil   == uri.split('/')[-2]=~(PhotoCook.command_regex) ||
+        nil   == (uri.split('/')[-2] =~ PhotoCook.command_regex) ||
 
         # If for some reasons file exists but request went to Ruby app
         true  == requested_file_exists?(uri)
@@ -42,9 +42,13 @@ module PhotoCook
       # Matched data: width:auto&height:640&crop:true&pixel_ratio:1
       command = Regexp.last_match
 
+      # Map crop option values: 'yes' => true, 'no' => false
+      crop  = PhotoCook.crop_to_bool(command[:crop])
+
       # Finally resize photo
       # Resized photo will appear in resize directory
-      photo = PhotoCook.actually_resize(source_path, command[:width], command[:height], command[:pixel_ratio], command[:crop])
+      photo = PhotoCook.resize_photo(source_path,
+        command[:width], command[:height], pixel_ratio: command[:pixel_ratio], crop: crop)
 
       if photo
         respond_with_file(env)

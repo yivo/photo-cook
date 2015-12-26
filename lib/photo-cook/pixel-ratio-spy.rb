@@ -3,12 +3,17 @@ module PhotoCook
     extend ActiveSupport::Concern
 
     included do
-      before_action :pass_cookie_pixel_ratio_to_photo_cook
+      before_action :pass_pixel_ratio
     end
 
-    def pass_cookie_pixel_ratio_to_photo_cook
-      PhotoCook.current_client_pixel_ratio = cookies[:PhotoCookPixelRatio].to_f
+    def pass_pixel_ratio
+      ratio = cookies[:PhotoCookPixelRatio].to_f
+      # Dont set pixel ratio if for some reasons it is invalid
+      PhotoCook.client_pixel_ratio = PhotoCook.valid_pixel_ratio?(ratio) ? ratio : nil
     end
   end
-  mattr_accessor :current_client_pixel_ratio
+
+  class << self
+    attr_accessor :client_pixel_ratio
+  end
 end

@@ -1,26 +1,35 @@
 module PhotoCook
   module Dimensions
-    def parse_and_check_dimensions(width, height)
-      width   = width   == :auto ? 0 : width.to_i
-      height  = height  == :auto ? 0 : height.to_i
+    def parse_and_check_dimensions(unsafe_width, unsafe_height)
+      width  = unsafe_width  == :auto ? 0 : unsafe_width.to_i
+      height = unsafe_height == :auto ? 0 : unsafe_height.to_i
+
       check_dimensions!(width, height)
       [width, height]
     end
 
     def check_dimensions!(width, height)
-      raise ArgumentError, 'Expected positive numbers' unless valid_dimensions?(width, height)
+      raise WidthOutOfBoundsError     if width  < 0 || width  > 9999
+      raise HeightOutOfBoundsError    if height < 0 || height > 9999
+      raise NoConcreteDimensionsError if width + height == 0
     end
+  end
 
-    def valid_dimensions?(width, height)
-      width >= 0 && height >= 0
+  class WidthOutOfBoundsError < ArgumentError
+    def initialize
+      super 'Width must be positive integer number (0...9999)'
     end
+  end
 
-    def multiply_and_round_dimensions(ratio, width, height)
-      [(width * ratio).round, (height * ratio).round]
+  class HeightOutOfBoundsError < ArgumentError
+    def initialize
+      super 'Height must be positive integer number (0...9999)'
     end
+  end
 
-    def literal_dimensions(width, height)
-      "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}"
+  class NoConcreteDimensionsError < ArgumentError
+    def initialize
+      super "Both width and height specified as 'auto'"
     end
   end
   extend Dimensions

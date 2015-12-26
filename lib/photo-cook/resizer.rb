@@ -21,11 +21,10 @@ module PhotoCook
     def resize_to_fit(photo_path, width, height, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless photo = open(photo_path) && photo.valid?
+      return unless (photo = open(photo_path)) && photo.valid?
 
-      store_path = assemble_store_path(photo_path, width, height, crop: false, pixel_ratio: pixel_ratio)
-      width      = (width  * pixel_ratio).round
-      height     = (height * pixel_ratio).round
+      store_path    = assemble_store_path(photo_path, width, height, pixel_ratio, false)
+      width, height = multiply_dimensions(width, height, pixel_ratio)
 
       photo.combine_options { |cmd| cmd.resize "#{literal_dimensions(width, height)}>" }
 
@@ -40,12 +39,11 @@ module PhotoCook
     def resize_to_fill(photo_path, width, height, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless photo = open(photo_path) && photo.valid?
+      return unless (photo = open(photo_path)) && photo.valid?
 
-      store_path = assemble_store_path(photo_path, width, height, crop: true, pixel_ratio: pixel_ratio)
-      cols, rows = photo[:dimensions]
-      mwidth     = (width  * pixel_ratio).round
-      mheight    = (height * pixel_ratio).round
+      store_path      = assemble_store_path(photo_path, width, height, pixel_ratio, true)
+      cols, rows      = photo[:dimensions]
+      mwidth, mheight = multiply_dimensions(width, height, pixel_ratio)
 
       # TODO
       # Original dimensions are 1000x800. You want 640x640@1x. You will get 640x640
@@ -104,8 +102,12 @@ module PhotoCook
       "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}"
     end
 
-    def assemble_store_path(path, width, height, options)
-      PhotoCook.assemble_store_path(path, width, height, options)
+    def assemble_store_path(path, width, height, pixel_ratio, crop)
+      PhotoCook.assemble_store_path(path, width, height, pixel_ratio, crop)
+    end
+
+    def multiply_dimensions(width, height, ratio)
+      [(width * ratio).round, (height * ratio).round]
     end
   end
 end
