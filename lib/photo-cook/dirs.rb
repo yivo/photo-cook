@@ -4,5 +4,5 @@ module PhotoCook
   end
 
   self.public_dir = 'public'
-  self.cache_dir  = 'photo-cook-cache'
+  self.cache_dir  = 'resize-cache'
 end
