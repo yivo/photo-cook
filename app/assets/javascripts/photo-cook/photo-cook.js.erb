@@ -1,13 +1,15 @@
 (function(root) {
   var PhotoCook = {
-    resizeDir: <%= PhotoCook.cache_dir.to_json %>,
+    cacheDir: <%= PhotoCook.cache_dir.to_json %>,
 
-    commandRegex: /\-(?:(?:\d+x\d+)|(?:\d+x)|(?:x\d+))(?:crop)?$/,
+    commandRegex: /^$width=auto|\d{1,5}&height=auto|\d{1,5}&pixel_ratio=[1234]&crop=yes|no$/,
 
     initialize: function() {
       PhotoCook.persistPixelRatio();
     },
 
+    // Returns device pixel ratio (float)
+    // If no ratio could be determined will return normal ratio (1.0)
     pixelRatio: (function () {
       // https://gist.github.com/marcedwards/3446599
       var mediaQuery = [
@@ -22,11 +24,11 @@
       // and if so return 2x ratio
       if (ratio == null && typeof window.matchMedia === 'function') {
         if (window.matchMedia(mediaQuery).matches) {
-          ratio = 2;
+          ratio = 2.0;
         }
       }
 
-      return parseFloat(ratio == null ? 1 : ratio);
+      return parseFloat(ratio) || 1.0;
     })(),
 
     persistPixelRatio: function() {
@@ -35,66 +37,35 @@
         // Expires in 1 year
         date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
         var expires = 'expires=' + date.toUTCString();
-        document.cookie = "PhotoCookPixelRatio=" + PhotoCook.pixelRatio + '; ' + expires;
+        document.cookie = 'PhotoCookPixelRatio=' + PhotoCook.pixelRatio + '; ' + expires;
     },
 
     resize: function (path, width, height, options) {
-      var crop  = typeof options === 'boolean' ? !!options : !!(options && options.crop);
-      var ratio = Math.max(0, options && options.pixelRatio) || PhotoCook.pixelRatio;
-
-      var command = '-' + (width && width !== 'auto' ? Math.round(width * ratio) : '')
-                        + 'x'
-                        + (height && height !== 'auto' ? Math.round(height * ratio) : '')
-                        + (crop ? 'crop' : '');
-
-      var index;       index = path.lastIndexOf('.');
-      if (index < 0) { index = path.lastIndexOf('?'); }
-      if (index < 0) { index = path.lastIndexOf('#'); }
-
-      var leftPart = path.slice(0, Math.max(path.lastIndexOf('/'), 0));
-      var rightPart = index >= 0 ? path.slice(index) : '';
-
-      var basename = path.slice(
-          leftPart ? leftPart.length + 1 : 0,
-          rightPart ? 0 - rightPart.length : path.length
-      );
-
-      return (leftPart ? leftPart + '/' : leftPart)
-              + PhotoCook.resizeDir
-              + '/'
-              + basename
-              + command
-              + rightPart;
+      var crop    = typeof options === 'boolean' ? !!options : !!(options && options.crop);
+      var ratio   = Math.ceil(Math.max(0, options && options.pixelRatio) || PhotoCook.pixelRatio);
+      var command = 'width='       + (+width  || 'auto') +
+                   '&height='      + (+height || 'auto') +
+                   '&pixel_ratio=' + (+ratio  || 1) +
+                   '&crop='        + (crop ? 'yes' : 'no');
+      var els     = path.split('/');
+      els.splice(-1, 0, PhotoCook.cacheDir, command);
+      return els.join('/');
     },
 
-    strip: function (path) {
-      var token = PhotoCook.resizeDir + '/';
-      var leftIndex = path.lastIndexOf(token);
-      if (leftIndex < 0 || (leftIndex > 0 && path[leftIndex - 1] !== '/')) {
-        return path;
+    strip: function (uri) {
+      var sections = uri.split('/');
+      var length   = sections.length;
+      if (length < 3) { return uri; }
+
+      var cacheDir = sections[length - 3];
+      var command  = sections[length - 2];
+
+      if (PhotoCook.cacheDir !== cacheDir || PhotoCook.commandRegex.test(command) == false) {
+        return uri;
       }
 
-      var rightIndex;       rightIndex = path.lastIndexOf('.');
-      if (rightIndex < 0) { rightIndex = path.lastIndexOf('?'); }
-      if (rightIndex < 0) { rightIndex = path.lastIndexOf('#'); }
-
-      var basename = path.slice(
-          leftIndex + token.length,
-          rightIndex >= 0 ? 0 - path.length + rightIndex : path.length
-      );
-
-      var oldLength = basename.length;
-
-      basename = basename.replace(PhotoCook.commandRegex, '');
-
-      if (oldLength === basename.length) {
-        return path;
-      }
-
-      var leftPart = path.slice(0, leftIndex);
-      var rightPart = rightIndex >= 0 ? path.slice(rightIndex) : '';
-
-      return leftPart + basename + rightPart;
+      sections.splice(length - 3, 2)
+      return sections.join('/');
     },
 
     uriRegex: /^[-a-z]+:\/\/|^(?:cid|data):|^\/\//i,
