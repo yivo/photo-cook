@@ -9,27 +9,27 @@ module PhotoCook
     end
 
     def check_dimensions!(width, height)
-      raise WidthOutOfBoundsError     if width  < 0 || width  > 9999
-      raise HeightOutOfBoundsError    if height < 0 || height > 9999
-      raise NoConcreteDimensionsError if width + height == 0
+      raise WidthOutOfBounds     if width  < 0 || width  > 9999
+      raise HeightOutOfBounds    if height < 0 || height > 9999
+      raise NoConcreteDimensions if width + height == 0
     end
   end
 
-  class WidthOutOfBoundsError < ArgumentError
+  class WidthOutOfBounds < ArgumentError
     def initialize
       super 'Width must be positive integer number (0...9999)'
     end
   end
 
-  class HeightOutOfBoundsError < ArgumentError
+  class HeightOutOfBounds < ArgumentError
     def initialize
       super 'Height must be positive integer number (0...9999)'
     end
   end
 
-  class NoConcreteDimensionsError < ArgumentError
+  class NoConcreteDimensions < ArgumentError
     def initialize
-      super "Both width and height specified as 'auto'"
+      super 'Both width and height specified as :auto'
     end
   end
   extend Dimensions

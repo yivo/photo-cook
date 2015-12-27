@@ -8,49 +8,55 @@ module PhotoCook
       @app, @root = app, root
     end
 
-    # Consider we have car.png in /uploads/photos/1
+    # Consider we have car.png in /uploads/photos/1/car.png
     # We want to resize it with the following params:
-    #   Width:  choose automatically
-    #   Height: exactly 640px
-    #   Crop:   yes
-    #   Pixel   ratio: 1
+    #   Width:       choose automatically
+    #   Height:      exactly 640px
+    #   Pixel ratio: 1
+    #   Crop:        yes
     #
     # Middleware will handle this URI:
-    #   /resized/uploads/photos/1/width:auto&height:640&crop:true&pixel_ratio:1/car.png
+    #   /uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
     #
     def call(env)
       uri = extract_uri(env)
 
       return default_actions(env) if
 
-        # Check if uri starts with '/resized'
-        false == uri.start_with?(PhotoCook.resize_uri_indicator) ||
-
-        # Check if uri has valid resize command.
-        #   uri.split('/')[-2] => width:auto&height:640&crop:true&pixel_ratio:1
-        nil   == (uri.split('/')[-2] =~ PhotoCook.command_regex) ||
+        # Check if URI contains PhotoCook resize indicators
+        PhotoCook.resize_uri?(uri) == false ||
 
         # If for some reasons file exists but request went to Ruby app
-        true  == requested_file_exists?(uri)
+        requested_file_exists?(uri)
 
       # At this point we are sure that this request is targeting to resize photo
 
-      # Assemble path of the source photo:
-      #   => /uploads/photos/1/car.png
-      source_path = assemble_source_path(uri)
+      PhotoCook.logger.matched_resize_uri(uri)
 
-      # Matched data: width:auto&height:640&crop:true&pixel_ratio:1
-      command = Regexp.last_match
+      # Matched data: width=auto&height=640&pixel_ratio=1&crop=yes
+      command = PhotoCook.extract_command(uri)
+
+      # Assemble path of the source photo:
+      #   => /application/public/uploads/photos/1/car.png
+      source_path = PhotoCook.assemble_source_path(@root, uri)
+
+      # Assemble path of the resized photo:
+      #   => /application/public/resized/uploads/photos/1/COMMAND/car.png
+      store_path  = PhotoCook.assemble_store_path(@root, source_path, command.to_s)
 
       # Map crop option values: 'yes' => true, 'no' => false
-      crop  = PhotoCook.crop_to_bool(command[:crop])
+      crop        = PhotoCook.decode_crop_option(command[:crop])
 
       # Finally resize photo
       # Resized photo will appear in resize directory
-      photo = PhotoCook.resize_photo(source_path,
-        command[:width], command[:height], pixel_ratio: command[:pixel_ratio], crop: crop)
+      photo = PhotoCook.perform_resize(
+        source_path, store_path,
+        command[:width], command[:height],
+        pixel_ratio: command[:pixel_ratio], crop: crop
+      )
 
       if photo
+        symlink_cache_dir(source_path, store_path)
         respond_with_file(env)
       else
         default_actions(env)
@@ -58,31 +64,14 @@ module PhotoCook
     end
 
   private
-
-    def assemble_source_path(resize_uri)
-      # Take URI:
-      # /resized/uploads/photos/1/width:auto&height:640&crop:true&pixel_ratio:1/car.png
-      #
-      # Split by file separator:
-      # ["", "resized", "uploads", "photos", "1", "width:auto&height:640&crop:true&pixel_ratio:1", "car.png"]
-      #
-      els = resize_uri.split('/')
-
-      # Delete PhotoCook directory:
-      # ["", "uploads", "photos", "1", "width:auto&height:640&crop:true&pixel_ratio:1", "car.png"]
-      els.delete_at(1)
-
-      # Delete command string:
-      # ["", "uploads", "photos", "1", "car.png"]
-      els.delete_at(-2)
-
-      URI.decode File.join(@root, PhotoCook.public_dir, els)
+    def public
+      @public ||= PhotoCook.assemble_public_path(@root)
     end
 
     def requested_file_exists?(uri)
       # Check if file exists:
-      #   /application/public/resized/uploads/photos/1/width:auto&height:640&crop:true&pixel_ratio:1/car.png
-      File.exists? File.join(@root, PhotoCook.public_dir, uri)
+      #   /application/public/uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+      File.exists? File.join(public, uri)
     end
 
     def extract_uri(env)
@@ -97,9 +86,37 @@ module PhotoCook
     def respond_with_file(env)
       # http://rubylogs.com/writing-rails-middleware/
       # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
-      status, headers, body = Rack::File.new(File.join(@root, PhotoCook.public_dir)).call(env)
+      status, headers, body = Rack::File.new(public).call(env)
       response = Rack::Response.new(body, status, headers)
       response.finish
+    end
+
+    def symlink_cache_dir(source_path, store_path)
+      # /application/public/uploads/photos/1
+      p1 = Pathname.new(File.dirname(source_path))
+
+      # /application/public/resized/uploads/photos/1
+      p2 = Pathname.new(File.dirname(File.dirname(store_path)))
+
+      # ../../../resized/uploads/photos/1
+      relative = p2.relative_path_from(p1)
+
+      # Guess cache directory (must be same as PhotoCook.cache_dir)
+      cache_dir = relative.to_s.split(File::SEPARATOR).find { |el| !(el =~ /\A\.\.?\z/) }
+
+      unless Dir.exists?(p1.join(cache_dir))
+        cmd = "cd #{p1} && rm -rf #{cache_dir} && ln -s #{relative} #{cache_dir}"
+
+        PhotoCook.logger.will_symlink_cache_dir(cmd)
+
+        %x{ #{cmd} }
+
+        if $?.success?
+          PhotoCook.logger.symlink_cache_dir_success
+        else
+          PhotoCook.logger.symlink_cache_dir_failure
+        end
+      end
     end
   end
 end

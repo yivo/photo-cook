@@ -64,16 +64,16 @@ module PhotoCook
     #
     # Arguments:
     #   root              => /application
-    #   source_path       => /uploads/photos/1/car.png
+    #   source_path       => /application/public/uploads/photos/1/car.png
     #   assembled_command => width=auto&height=640&crop=yes&pixel_ratio=1
     #
     # Returns /application/public/resized/uploads/photos/1/width=auto&height=640&crop=yes&pixel_ratio=1/car.png
     #
     # NOTE: This method performs no validation
     def assemble_store_path(root, source_path, assembled_command)
-      public    = assemble_public_path(root)
-      photo_loc = dirname_or_blank(source_path)
-      File.join public, cache_dir, photo_loc, assembled_command, File.basename(source_path)
+      public         = assemble_public_path(root)
+      photo_location = dirname_or_blank(source_path.split(public).last)
+      File.join public, cache_dir, photo_location, assembled_command, File.basename(source_path)
     end
 
     # Path to public directory

@@ -3,8 +3,8 @@ module PhotoCook
     def parse_and_check_pixel_ratio(unsafe_ratio)
       pixel_ratio = unsafe_ratio.to_f
 
-      raise PixelRatioInvalidOrInfiniteError if pixel_ratio.nan? || pixel_ratio.infinite?
-      raise PixelRatioOutOfBoundsError       if pixel_ratio < 1 || pixel_ratio > 4
+      raise PixelRatioInvalidOrInfinite if pixel_ratio.nan? || pixel_ratio.infinite?
+      raise PixelRatioOutOfBounds       if pixel_ratio < 1 || pixel_ratio > 4
 
       pixel_ratio
     end
@@ -12,15 +12,22 @@ module PhotoCook
     def valid_pixel_ratio?(ratio)
       !ratio.nan? && !ratio.infinite? && ratio >= 1 && ratio <= 4
     end
+
+    # Do not produce various number of pixel ratios:
+    #   2.5 => 3
+    #   2.1 => 3
+    def unify_pixel_ratio(px_ratio)
+      px_ratio.ceil
+    end
   end
 
-  class PixelRatioInvalidOrInfiniteError < ArgumentError
+  class PixelRatioInvalidOrInfinite < ArgumentError
     def initialize
       super 'Given pixel ratio is invalid number or infinite'
     end
   end
 
-  class PixelRatioOutOfBoundsError < ArgumentError
+  class PixelRatioOutOfBounds < ArgumentError
     def initialize
       super 'Pixel ratio must be positive number: 1 <= pixel_ratio <= 4'
     end
