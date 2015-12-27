@@ -67,7 +67,7 @@ module PhotoCook
         sections[-3] == cache_dir &&
 
         # Check if valid resize command exists:
-        #   sections[-2] => width=auto&height=640&crop=yes&pixel_ratio=1
+        #   sections[-2] => width=auto&height=640&pixel_ratio=1&crop=yes
         (sections[-2] =~ command_regex) == 0
       end
     end
