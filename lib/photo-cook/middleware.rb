@@ -105,7 +105,7 @@ module PhotoCook
       cache_dir = relative.to_s.split(File::SEPARATOR).find { |el| !(el =~ /\A\.\.?\z/) }
 
       unless Dir.exists?(p1.join(cache_dir))
-        cmd = "cd #{p1} && rm -rf #{cache_dir} && ln -s #{relative} #{cache_dir}"
+        cmd = "cd #{p1} && rm -rf #{cache_dir} && ln -rs #{relative} #{cache_dir}"
 
         PhotoCook.logger.will_symlink_cache_dir(cmd)
 
