@@ -5,11 +5,11 @@ module PhotoCook
     CENTER_GRAVITY          = 'Center'.freeze
     TRANSPARENT_BACKGROUND  = 'rgba(255,255,255,0.0)'.freeze
 
-    def resize(photo_path, width, height, pixel_ratio = 1.0, crop = false)
+    def resize(src_path, store_path, w, h, px_ratio = 1, crop = false)
       if crop
-        resize_to_fill(photo_path, width, height, pixel_ratio)
+        resize_to_fill(src_path, store_path, w, h, px_ratio)
       else
-        resize_to_fit(photo_path, width, height, pixel_ratio)
+        resize_to_fit(src_path, store_path, w, h, px_ratio)
       end
     end
 
@@ -18,12 +18,11 @@ module PhotoCook
     # - new dimensions will be not larger then the specified
     #
     # https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/mini_magick.rb#L131
-    def resize_to_fit(photo_path, width, height, pixel_ratio)
+    def resize_to_fit(source_path, store_path, width, height, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless (photo = open(photo_path)) && photo.valid?
+      return unless (photo = open(source_path)) && photo.valid?
 
-      store_path    = assemble_store_path(photo_path, width, height, pixel_ratio, false)
       width, height = multiply_dimensions(width, height, pixel_ratio)
 
       photo.combine_options { |cmd| cmd.resize "#{literal_dimensions(width, height)}>" }
@@ -36,12 +35,11 @@ module PhotoCook
     # - the photo will be cropped if necessary
     #
     # https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/mini_magick.rb#L176
-    def resize_to_fill(photo_path, width, height, pixel_ratio)
+    def resize_to_fill(source_path, store_path, width, height, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
-      return unless (photo = open(photo_path)) && photo.valid?
+      return unless (photo = open(source_path)) && photo.valid?
 
-      store_path      = assemble_store_path(photo_path, width, height, pixel_ratio, true)
       cols, rows      = photo[:dimensions]
       mwidth, mheight = multiply_dimensions(width, height, pixel_ratio)
 
@@ -78,32 +76,26 @@ module PhotoCook
 
   protected
 
-    def open(photo_path)
+    def open(source_path)
       begin
         # MiniMagick::Image.open creates a temporary file for us and protects original
-        photo = MagickPhoto.open(photo_path)
-        photo.source_path = photo_path
+        photo = MagickPhoto.open(source_path)
+        photo.source_path = source_path
         photo
       rescue
         nil
       end
     end
 
-    def store(resized_photo, path_to_store_at)
-      dir = File.dirname(path_to_store_at)
-      FileUtils.mkdir_p(dir) unless File.exists?(dir)
-
-      resized_photo.write(path_to_store_at)
-      resized_photo.resized_path = path_to_store_at
+    def store(resized_photo, store_path)
+      FileUtils.mkdir_p(File.dirname(store_path))
+      resized_photo.write(store_path)
+      resized_photo.resized_path = store_path
       resized_photo
     end
 
     def literal_dimensions(width, height)
-      "#{width == 0 ? nil : width}x#{height == 0 ? nil : height}"
-    end
-
-    def assemble_store_path(path, width, height, pixel_ratio, crop)
-      PhotoCook.assemble_store_path(path, width, height, pixel_ratio, crop)
+      "#{width if width != 0}x#{height if height != 0}"
     end
 
     def multiply_dimensions(width, height, ratio)
