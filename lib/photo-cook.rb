@@ -2,6 +2,7 @@ require 'fileutils'
 require 'pathname'
 require 'rake'
 require 'mini_magick'
+require 'open3'
 
 module PhotoCook
   def self.rails_env?
@@ -28,4 +29,5 @@ require 'photo-cook/size-formatting'
 if PhotoCook.rails_env?
   require 'photo-cook/engine'
   require 'photo-cook/pixel-ratio-spy'
+  require 'photo-cook/optimization-job'
 end

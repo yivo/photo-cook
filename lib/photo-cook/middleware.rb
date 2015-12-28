@@ -1,6 +1,8 @@
 # To use this middleware you should configure application:
 #   application.config.middleware.insert_before(Rack::Sendfile, PhotoCook::Middleware, Rails.root)
 
+# TODO Extract symlink
+
 module PhotoCook
   class Middleware
 
@@ -44,22 +46,27 @@ module PhotoCook
       #   => /application/public/resized/uploads/photos/1/COMMAND/car.png
       store_path  = PhotoCook.assemble_store_path(@root, source_path, command.to_s)
 
-      # Map crop option values: 'yes' => true, 'no' => false
-      crop        = PhotoCook.decode_crop_option(command[:crop])
-
-      # Finally resize photo
-      # Resized photo will appear in resize directory
-      photo = PhotoCook.perform_resize(
-        source_path, store_path,
-        command[:width], command[:height],
-        pixel_ratio: command[:pixel_ratio], crop: crop
-      )
-
-      if photo
+      if File.exists?(store_path)
         symlink_cache_dir(source_path, store_path)
-        respond_with_file(env)
-      else
         default_actions(env)
+
+      else
+        # Map crop option values: 'yes' => true, 'no' => false
+        crop = PhotoCook.decode_crop_option(command[:crop])
+
+        # Finally resize photo
+        # Resized photo will appear in resize directory
+        photo = PhotoCook.perform_resize(
+          source_path, store_path,
+          command[:width], command[:height],
+          pixel_ratio: command[:pixel_ratio], crop: crop
+        )
+        if photo
+          symlink_cache_dir(source_path, store_path)
+          respond_with_file(env)
+        else
+          default_actions(env)
+        end
       end
     end
 
@@ -105,7 +112,9 @@ module PhotoCook
       cache_dir = relative.to_s.split(File::SEPARATOR).find { |el| !(el =~ /\A\.\.?\z/) }
 
       unless Dir.exists?(p1.join(cache_dir))
-        cmd = "cd #{p1} && rm -rf #{cache_dir} && ln -rs #{relative} #{cache_dir}"
+        ln_flags = PhotoCook.explicitly_add_relative_flag? ? '-rs' : '-s'
+
+        cmd = "cd #{p1} && rm -rf #{cache_dir} && ln #{ln_flags} #{relative} #{cache_dir}"
 
         PhotoCook.logger.will_symlink_cache_dir(cmd)
 
@@ -118,5 +127,13 @@ module PhotoCook
         end
       end
     end
+  end
+
+  def self.explicitly_add_relative_flag?
+    if @relative_flag_illegal.nil?
+      out = Open3.capture2e('ln', '-rs')[0]
+      @relative_flag_illegal = !!(out =~ /\billegal\b/)
+    end
+    @relative_flag_illegal == false
   end
 end
