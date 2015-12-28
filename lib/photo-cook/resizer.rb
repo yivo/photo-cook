@@ -1,4 +1,8 @@
 module PhotoCook
+  def self.resizer
+    Resizer.instance
+  end
+
   class Resizer
     include Singleton
 

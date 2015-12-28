@@ -19,7 +19,11 @@ require 'photo-cook/resizer'
 require 'photo-cook/middleware'
 require 'photo-cook/magick-photo'
 require 'photo-cook/carrierwave'
+require 'photo-cook/abstract-optimizer'
+require 'photo-cook/image-optim'
 require 'photo-cook/resize-api'
+require 'photo-cook/optimization-api'
+require 'photo-cook/size-formatting'
 
 if PhotoCook.rails_env?
   require 'photo-cook/engine'
