@@ -79,6 +79,8 @@ module PhotoCook
             [options[:pixel_ratio], options.fetch(:crop, false)]
           when Symbol
             [nil, options == :crop]
+          else
+            [nil, !!options]
         end
       end
 
