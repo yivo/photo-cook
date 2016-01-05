@@ -47,6 +47,8 @@ module PhotoCook
       cols, rows      = photo[:dimensions]
       mwidth, mheight = multiply_dimensions(width, height, pixel_ratio)
 
+      width, height   = mwidth, mheight
+
       # TODO
       # Original dimensions are 1000x800. You want 640x640@1x. You will get 640x640
       # Original dimensions are 1000x800. You want 640x640@2x. You will get 800x800
