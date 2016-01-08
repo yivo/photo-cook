@@ -3,6 +3,7 @@ require 'pathname'
 require 'rake'
 require 'mini_magick'
 require 'open3'
+require 'base64'
 
 module PhotoCook
   def self.rails_env?

@@ -54,8 +54,11 @@ module PhotoCook
     # Returns /application/public/uploads/photos/1/car.png
     #
     # NOTE: This method performs no validation
-    def assemble_source_path(root, resize_uri)
-      uri = disassemble_resize_uri(resize_uri)
+    def assemble_source_path_from_resize_uri(root, resize_uri)
+      assemble_source_path_from_normal_uri(root, disassemble_resize_uri(resize_uri))
+    end
+
+    def assemble_source_path_from_normal_uri(root, uri)
       uri.gsub!('/', '\\') if File::SEPARATOR != '/'
       File.join(assemble_public_path(root), uri)
     end

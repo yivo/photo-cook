@@ -13,12 +13,12 @@ module PhotoCook
 
         width, height     = parse_and_check_dimensions(width, height)
         pixel_ratio, crop = open_options(options)
-                                                                          # Explicit     # Default
-        pixel_ratio       = unify_pixel_ratio(parse_and_check_pixel_ratio(pixel_ratio || 1))
+        pixel_ratio       = final_pixel_ratio(pixel_ratio, false)
+
         photo             = Resizer.instance.resize(source_path, store_path, width, height, pixel_ratio, !!crop)
 
         finished          = Time.now
-        logger.performed_resize(photo, width, height, pixel_ratio, !!crop, (finished - started) * 1000.0)
+        photo && logger.performed_resize(photo, width, height, pixel_ratio, !!crop, (finished - started) * 1000.0)
         photo
       end
     end
@@ -32,9 +32,34 @@ module PhotoCook
       def resize(uri, width, height, options = {})
         width, height     = parse_and_check_dimensions(width, height)
         pixel_ratio, crop = open_options(options)
-                                                        # Explicit     # From cookies                  # Default
-        pixel_ratio       = parse_and_check_pixel_ratio(pixel_ratio || PhotoCook.client_pixel_ratio || 1)
-        assemble_resize_uri(uri, width, height, unify_pixel_ratio(pixel_ratio), !!crop)
+        pixel_ratio       = final_pixel_ratio(pixel_ratio)
+        assemble_resize_uri(uri, width, height, pixel_ratio, !!crop)
+      end
+
+      if PhotoCook.rails_env?
+        def resize_static(uri, width, height, options = {})
+          Rails.application.config.serve_static_files ? uri : resize(uri, width, height, options)
+        end
+      end
+
+      def base64_uri(uri, width, height, options = {})
+        width, height     = parse_and_check_dimensions(width, height)
+        pixel_ratio, crop = open_options(options)
+        pixel_ratio       = final_pixel_ratio(pixel_ratio)
+
+        command     = assemble_command(width, height, pixel_ratio, crop)
+        source_path = assemble_source_path_from_normal_uri(root, uri)
+        store_path  = assemble_store_path(root, source_path, command)
+
+        photo = if File.exists?(store_path)
+          MagickPhoto.new(store_path)
+        else
+          perform_resize(uri, width, height, options)
+        end
+
+        if photo
+          "data:#{photo.mime_type};base64,#{Base64.encode64(File.read(photo.path))}"
+        end
       end
 
       # Inverse of PhotoCook#resize (see ^):
@@ -85,6 +110,15 @@ module PhotoCook
       end
 
       private :open_options
+
+      def final_pixel_ratio(any_pixel_ratio, follow_client = true)
+                                                      # Explicit
+        unify_pixel_ratio parse_and_check_pixel_ratio(any_pixel_ratio ||
+          # From cookies                                          # Default
+          (follow_client ? PhotoCook.client_pixel_ratio : nil) || 1)
+      end
+
+      private :final_pixel_ratio
     end
   end
 

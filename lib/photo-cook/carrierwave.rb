@@ -4,6 +4,10 @@ module PhotoCook
       PhotoCook.resize(url, *args)
     end
 
+    def base64_uri(*args)
+      PhotoCook.base64_uri(url, *args)
+    end
+
     def hresize(*args)
       PhotoCook.hresize(url, *args)
     end

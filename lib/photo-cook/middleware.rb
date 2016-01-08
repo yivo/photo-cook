@@ -40,7 +40,7 @@ module PhotoCook
 
       # Assemble path of the source photo:
       #   => /application/public/uploads/photos/1/car.png
-      source_path = PhotoCook.assemble_source_path(@root, uri)
+      source_path = PhotoCook.assemble_source_path_from_resize_uri(@root, uri)
 
       # Assemble path of the resized photo:
       #   => /application/public/resized/uploads/photos/1/COMMAND/car.png
