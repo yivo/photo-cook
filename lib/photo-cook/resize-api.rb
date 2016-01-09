@@ -54,7 +54,7 @@ module PhotoCook
         photo = if File.exists?(store_path)
           MagickPhoto.new(store_path)
         else
-          perform_resize(uri, width, height, options)
+          perform_resize(source_path, store_path, width, height, options)
         end
 
         if photo
