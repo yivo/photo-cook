@@ -54,7 +54,7 @@ module PhotoCook
       }
     end
 
-    def performed_optimization(path, original_size, new_size)
+    def performed_optimization(path, original_size, new_size, msec)
       diff = original_size - new_size
       info %{
 [PhotoCook] Performed optimization.
@@ -62,6 +62,7 @@ module PhotoCook
   Original size: #{PhotoCook.format_size(original_size)}
   New size:      #{PhotoCook.format_size(new_size)}
   Saved:         #{diff} bytes / #{PhotoCook.format_size(diff)} / #{(diff / original_size.to_f * 100.0).round(2)}%
+  Completed in:  #{msec.round(1)}ms
       }
     end
 
