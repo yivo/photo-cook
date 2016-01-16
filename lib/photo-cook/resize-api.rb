@@ -19,6 +19,10 @@ module PhotoCook
 
         finished          = Time.now
         photo && logger.performed_resize(photo, width, height, pixel_ratio, !!crop, (finished - started) * 1000.0)
+
+        # TODO Remove this
+        photo && perform_optimization(store_path)
+
         photo
       end
     end
