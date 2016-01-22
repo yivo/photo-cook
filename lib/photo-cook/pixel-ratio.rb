@@ -19,6 +19,10 @@ module PhotoCook
     def unify_pixel_ratio(px_ratio)
       px_ratio.ceil
     end
+
+    def pixel_ratio
+      unify_pixel_ratio(client_pixel_ratio || 1.0)
+    end
   end
 
   class PixelRatioInvalidOrInfinite < ArgumentError
