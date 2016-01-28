@@ -15,5 +15,11 @@ module PhotoCook
     def vresize(*args)
       PhotoCook.vresize(url, *args)
     end
+
+    # TODO Problem with changed file size after optimization and WYSIWYG
+
+    def optimize_photo
+      PhotoCook::OptimizationJob.perform_now(current_path)
+    end
   end
 end
