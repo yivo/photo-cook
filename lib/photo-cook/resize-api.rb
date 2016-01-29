@@ -113,7 +113,7 @@ module PhotoCook
         end
       end
 
-      private :open_options
+      # private :open_options
 
       def final_pixel_ratio(any_pixel_ratio, follow_client = true)
                                                       # Explicit

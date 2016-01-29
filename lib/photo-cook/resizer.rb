@@ -29,7 +29,7 @@ module PhotoCook
 
       width, height = multiply_dimensions(width, height, pixel_ratio)
 
-      photo.combine_options { |cmd| cmd.resize "#{literal_dimensions(width, height)}>" }
+      photo.resize "#{literal_dimensions(width, height)}>"
 
       store(photo, store_path)
     end
@@ -39,41 +39,48 @@ module PhotoCook
     # - the photo will be cropped if necessary
     #
     # https://github.com/carrierwaveuploader/carrierwave/blob/71cb18bba4a2078524d1ea683f267d3a97aa9bc8/lib/carrierwave/processing/mini_magick.rb#L176
-    def resize_to_fill(source_path, store_path, width, height, pixel_ratio)
+    def resize_to_fill(source_path, store_path, rw, rh, pixel_ratio)
 
       # Do nothing if photo is not valid so exceptions will be not thrown
       return unless (photo = open(source_path)) && photo.valid?
 
-      cols, rows      = photo[:dimensions]
-      mwidth, mheight = multiply_dimensions(width, height, pixel_ratio)
+      ow, oh = photo[:dimensions]
+      mw, mh = multiply_dimensions(rw, rh, pixel_ratio)
+      fw, fh = mw, mh
 
-      width, height   = mwidth, mheight
-
-      # TODO
-      # Original dimensions are 1000x800. You want 640x640@1x. You will get 640x640
-      # Original dimensions are 1000x800. You want 640x640@2x. You will get 800x800
-      # Original dimensions are 1000x800. You want 640x640@3x. You will get 800x800
-      # Original dimensions are 1000x800. You want 1280x1280@1x. You will get ?
-      # Original dimensions are 1000x800. You want 1000x1280@1x. You will get ?
+      # ow   oh     rw  rh        mw  mh          fw  fh
+      # 1000x800 => 640x640@1x   (640x640)     => 640x640
+      # 1000x800 => 640x640@2x   (1280x1280)   => 800x800
+      # 1000x800 => 640x640@3x   (3840x3840)   => 800x800
+      # 1000x800 => 1280x1280@1x (1280x1280)   => 1280x1280
+      # 1000x800 => 1000x1280@1x (1000x1280)   => 1000x1280
+      # 1000x800 => 1000x1280@2x (2000x2560)   => 1000x1280
+      # 1000x800 => 1500x2000@2x (3000x4000)   => 1000x1333
+      # 264x175  => 200x150@2x   (400x300)     => 264x198
+      if pixel_ratio > 1 && ow < mw
+        fw = ow
+        fh = ((ow * rh) / rw).round
+      end
 
       photo.combine_options do |cmd|
-        if width != cols || height != rows
-          scale_x = width / cols.to_f
-          scale_y = height / rows.to_f
+        if fw != ow || fh != oh
+          scale_x = fw / ow.to_f
+          scale_y = fh / oh.to_f
           if scale_x >= scale_y
-            cols = (scale_x * (cols + 0.5)).round
-            rows = (scale_x * (rows + 0.5)).round
-            cmd.resize "#{cols}>"
+            ow = (scale_x * (ow + 0.5)).round
+            oh = (scale_x * (oh + 0.5)).round
+            cmd.resize "#{ow}>"
           else
-            cols = (scale_y * (cols + 0.5)).round
-            rows = (scale_y * (rows + 0.5)).round
-            cmd.resize "x#{rows}>"
+            ow = (scale_y * (ow + 0.5)).round
+            oh = (scale_y * (oh + 0.5)).round
+            cmd.resize "x#{oh}>"
           end
         end
+
         cmd.gravity CENTER_GRAVITY
         cmd.background TRANSPARENT_BACKGROUND
-        if cols != width || rows != height
-          cmd.extent "#{literal_dimensions(width, height)}>"
+        if ow != fw || oh != fh
+          cmd.extent "#{literal_dimensions(fw, fh)}>"
         end
       end
 
