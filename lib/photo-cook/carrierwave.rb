@@ -16,6 +16,10 @@ module PhotoCook
       PhotoCook.vresize(url, *args)
     end
 
+    def srcset(*args)
+      PhotoCook.resize(url, *args)
+    end
+
     # TODO Problem with changed file size after optimization and WYSIWYG
 
     def optimize_photo

@@ -52,6 +52,12 @@
       return els.join('/');
     },
 
+    srcset: function (path, width, height, options) {
+      var crop = typeof options === 'boolean' ? !!options : !!(options && options.crop);
+      return this.resize(path, width, height, {crop: crop, pixelRatio: 2}) + ' 2x, ' +
+             this.resize(path, width, height, {crop: crop, pixelRatio: 3}) + ' 3x'
+    },
+
     strip: function (uri) {
       var sections = uri.split('/');
       var length   = sections.length;
@@ -60,7 +66,7 @@
       var cacheDir = sections[length - 3];
       var command  = sections[length - 2];
 
-      if (PhotoCook.cacheDir !== cacheDir || PhotoCook.commandRegex.test(command) == false) {
+      if (PhotoCook.cacheDir !== cacheDir || PhotoCook.commandRegex.test(command) === false) {
         return uri;
       }
 

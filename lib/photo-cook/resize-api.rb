@@ -66,6 +66,12 @@ module PhotoCook
         end
       end
 
+      def srcset(url, w, h, o = {})
+        _, crop = open_options(o)
+        "#{resize(url, w, h, {crop: crop, pixel_ratio: 2})} 2x, " +
+        "#{resize(url, w, h, {crop: crop, pixel_ratio: 3})} 3x"
+      end
+
       # Inverse of PhotoCook#resize (see ^):
       #   strip('/uploads/resized/width=280&height=280&pixel_ratio=3&crop=no/car.png')
       #     => /uploads/car.png
