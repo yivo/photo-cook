@@ -17,7 +17,7 @@ module PhotoCook
     end
 
     def srcset(*args)
-      PhotoCook.resize(url, *args)
+      PhotoCook.srcset(url, *args)
     end
 
     # TODO Problem with changed file size after optimization and WYSIWYG
