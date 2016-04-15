@@ -2,7 +2,7 @@
   var PhotoCook = {
     cacheDir: <%= PhotoCook.cache_dir.to_json %>,
 
-    commandRegex: /^$width=auto|\d{1,5}&height=auto|\d{1,5}&pixel_ratio=[1234]&crop=yes|no$/,
+    commandRegex: /^width=auto|\d{1,5}&height=auto|\d{1,5}&pixel_ratio=[1234]&crop=yes|no$/,
 
     initialize: function() {
       PhotoCook.persistPixelRatio();
@@ -70,7 +70,7 @@
         return uri;
       }
 
-      sections.splice(length - 3, 2)
+      sections.splice(length - 3, 2);
       return sections.join('/');
     },
 
