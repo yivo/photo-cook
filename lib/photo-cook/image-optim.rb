@@ -39,7 +39,7 @@ module PhotoCook
     end
 
     def default_image_optim
-      lossless_image_optim
+      lossy_image_optim
     end
 
     # https://github.com/toy/image_optim
