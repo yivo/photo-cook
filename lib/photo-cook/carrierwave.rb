@@ -1,29 +1,15 @@
 module PhotoCook
   module CarrierWave
-    def resize(*args)
-      PhotoCook.resize(url, *args)
+    def resize(w, h, mode = :fit)
+      PhotoCook.resize(url, w, h, mode)
     end
 
-    def base64_uri(*args)
-      PhotoCook.base64_uri(url, *args)
+    def base64_uri(w, h, mode = :fit)
+      PhotoCook.base64_uri(url, w, h, mode)
     end
 
-    def hresize(*args)
-      PhotoCook.hresize(url, *args)
-    end
-
-    def vresize(*args)
-      PhotoCook.vresize(url, *args)
-    end
-
-    def srcset(*args)
-      PhotoCook.srcset(url, *args)
-    end
-
-    # TODO Problem with changed file size after optimization and WYSIWYG
-
-    def optimize_photo
-      PhotoCook::OptimizationJob.perform_now(current_path)
+    def optimize
+      PhotoCook.perform_optimization(current_path)
     end
   end
 end

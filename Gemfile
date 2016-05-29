@@ -1,4 +1,4 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 # Declare your gem's dependencies in photo_cook.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
@@ -13,4 +13,5 @@ gemspec
 # To use debugger
 # gem 'debugger'
 
-gem 'mini_magick'
+gem 'test-unit'
+gem 'shoulda-context'

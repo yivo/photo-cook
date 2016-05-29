@@ -1,8 +1,8 @@
 module PhotoCook
   module Dimensions
-    def parse_and_check_dimensions(unsafe_width, unsafe_height)
-      width  = unsafe_width  == :auto ? 0 : unsafe_width.to_i
-      height = unsafe_height == :auto ? 0 : unsafe_height.to_i
+    def parse_and_check_dimensions(untrusted_width, untrusted_height)
+      width  = untrusted_width  == :auto ? 0 : round_dimension(untrusted_width.to_f)
+      height = untrusted_height == :auto ? 0 : round_dimension(untrusted_height.to_f)
 
       check_dimensions!(width, height)
       [width, height]
@@ -12,6 +12,20 @@ module PhotoCook
       raise WidthOutOfBounds     if width  < 0 || width  > 9999
       raise HeightOutOfBounds    if height < 0 || height > 9999
       raise NoConcreteDimensions if width + height == 0
+    end
+
+    def multiply_dimensions(width, height, ratio)
+      [round_dimension(width * ratio), round_dimension(height * ratio)]
+    end
+
+    # Standardize how dimensions are rounded in PhotoCook
+    def round_dimension(x)
+      (x + 0.5).floor
+    end
+
+    # Returns Imagemagick dimension-string
+    def literal_dimensions(width, height)
+      "#{width if width != 0}x#{height if height != 0}"
     end
   end
 

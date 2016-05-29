@@ -1,8 +1,6 @@
 # To use this middleware you should configure application:
 #   application.config.middleware.insert_before(Rack::Sendfile, PhotoCook::Middleware, Rails.root)
 
-# TODO Extract symlink
-
 module PhotoCook
   class Middleware
 
@@ -14,11 +12,10 @@ module PhotoCook
     # We want to resize it with the following params:
     #   Width:       choose automatically
     #   Height:      exactly 640px
-    #   Pixel ratio: 1
-    #   Crop:        yes
+    #   Mode:        fill
     #
     # Middleware will handle this URI:
-    #   /uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+    #   /uploads/photos/1/resized/width=auto&height=640&mode=fill/car.png
     #
     def call(env)
       uri = extract_uri(env)
@@ -32,10 +29,9 @@ module PhotoCook
         requested_file_exists?(uri)
 
       # At this point we are sure that this request is targeting to resize photo
+      PhotoCook.notify(:matched_resize_uri, uri)
 
-      PhotoCook.logger.matched_resize_uri(uri)
-
-      # Matched data: width=auto&height=640&pixel_ratio=1&crop=yes
+      # Matched data: width=auto&height=640&mode=fill
       command = PhotoCook.extract_command(uri)
 
       # Assemble path of the source photo:
@@ -44,25 +40,19 @@ module PhotoCook
 
       # Assemble path of the resized photo:
       #   => /application/public/resized/uploads/photos/1/COMMAND/car.png
-      store_path  = PhotoCook.assemble_store_path(@root, source_path, command.to_s)
+      store_path = PhotoCook.assemble_store_path(@root, source_path, command.to_s)
 
       if File.exists?(store_path)
-        symlink_cache_dir(source_path, store_path)
+        PhotoCook.symlink_cache_dir(source_path, store_path)
         default_actions(env)
 
       else
-        # Map crop option values: 'yes' => true, 'no' => false
-        crop = PhotoCook.decode_crop_option(command[:crop])
-
         # Finally resize photo
         # Resized photo will appear in resize directory
-        photo = PhotoCook.perform_resize(
-          source_path, store_path,
-          command[:width], command[:height],
-          pixel_ratio: command[:pixel_ratio], crop: crop
-        )
+        photo = PhotoCook.perform_resize(source_path, store_path, command[:width], command[:height], command[:mode])
+        
         if photo
-          symlink_cache_dir(source_path, store_path)
+          PhotoCook.symlink_cache_dir(source_path, store_path)
           respond_with_file(env)
         else
           default_actions(env)
@@ -77,13 +67,12 @@ module PhotoCook
 
     def requested_file_exists?(uri)
       # Check if file exists:
-      #   /application/public/uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
-      File.exists? File.join(public, uri)
+      #   /application/public/uploads/photos/1/resized/width=auto&height=640&mode=fill/car.png
+      File.exists?(File.join(public, uri))
     end
 
     def extract_uri(env)
-      # Remove query string and fragment
-      Rack::Utils.unescape(env['PATH_INFO'].gsub(/[\?#].*\z/, ''))
+      Rack::Utils.clean_path_info(Rack::Utils.unescape(env['PATH_INFO']))
     end
 
     def default_actions(env)
@@ -97,43 +86,5 @@ module PhotoCook
       response = Rack::Response.new(body, status, headers)
       response.finish
     end
-
-    def symlink_cache_dir(source_path, store_path)
-      # /application/public/uploads/photos/1
-      p1 = Pathname.new(File.dirname(source_path))
-
-      # /application/public/resized/uploads/photos/1
-      p2 = Pathname.new(File.dirname(File.dirname(store_path)))
-
-      # ../../../resized/uploads/photos/1
-      relative = p2.relative_path_from(p1)
-
-      # Guess cache directory (must be same as PhotoCook.cache_dir)
-      cache_dir = relative.to_s.split(File::SEPARATOR).find { |el| !(el =~ /\A\.\.?\z/) }
-
-      unless Dir.exists?(p1.join(cache_dir))
-        ln_flags = PhotoCook.explicitly_add_relative_flag? ? '-rs' : '-s'
-
-        cmd = "cd #{p1} && rm -rf #{cache_dir} && ln #{ln_flags} #{relative} #{cache_dir}"
-
-        PhotoCook.logger.will_symlink_cache_dir(cmd)
-
-        %x{ #{cmd} }
-
-        if $?.success?
-          PhotoCook.logger.symlink_cache_dir_success
-        else
-          PhotoCook.logger.symlink_cache_dir_failure
-        end
-      end
-    end
-  end
-
-  def self.explicitly_add_relative_flag?
-    if @relative_flag_illegal.nil?
-      out = Open3.capture2e('ln', '-rs')[0]
-      @relative_flag_illegal = !!(out =~ /\billegal\b/)
-    end
-    @relative_flag_illegal == false
   end
 end

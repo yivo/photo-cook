@@ -1,50 +1,18 @@
 module PhotoCook
   class ImageOptim < AbstractOptimizer
-    def optimize(path, opts_or_sym = :lossless)
-      PhotoCook.logger.will_perform_optimization(path)
-
-      image_optim = case opts_or_sym
-        when Hash
-          opts_or_sym.empty? ? default_image_optim : ::ImageOptim.new(opts_or_sym)
-        when Symbol then named_image_optim(opts_or_sym)
-        else default_image_optim
+    def optimize(path)
+      result = image_optim.optimize_image!(path)
+      if result.kind_of?(::ImageOptim::ImagePath::Optimized)
+        { before: result.original_size, after: result.size }
+      else
+        false
       end
-
-      started     = Time.now
-      result      = image_optim.optimize_image!(path)
-
-      case result
-        when ::ImageOptim::ImagePath::Optimized
-          msec = (Time.now - started) * 1000.0
-          PhotoCook.logger.performed_optimization(path, result.original_size, result.size, msec)
-        else
-          PhotoCook.logger.no_optimization_performed(path)
-      end
-
-      result
     end
 
   protected
-    def named_image_optim(name)
-      case name
-        when :lossless then lossless_image_optim
-        when :lossy    then lossy_image_optim
-        else                default_image_optim
-      end
-    end
-
-  private
-    def lossless_image_optim
-      @lossless_image_optim ||= ::ImageOptim.new
-    end
-
-    def default_image_optim
-      lossy_image_optim
-    end
-
     # https://github.com/toy/image_optim
-    def lossy_image_optim
-      @lossy_image_optim ||= ::ImageOptim.new(
+    def image_optim
+      @image_optim ||= ::ImageOptim.new(
 
         # Nice level (defaults to 10)
         nice: 10,
