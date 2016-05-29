@@ -7,35 +7,35 @@ module PhotoCook
     #   source_uri  => /uploads/photos/1/car.png
     #   width       => :auto
     #   height      => 640
-    #   pixel_ratio => 1
-    #   crop        => true
+    #   mode        => fit
     #
-    # Returns /uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+    # Returns /uploads/photos/1/resized/width=auto&height=640&mode=fit/car.png
     #
     # NOTE: This method performs no validation
-    def assemble_resize_uri(source_uri, width, height, pixel_ratio, crop)
-      source_uri.split('/').insert(-2, cache_dir, assemble_command(width, height, pixel_ratio, crop)).join('/')
+    # NOTE: This method is very hot
+    def assemble_resize_uri(source_uri, width, height, mode)
+      source_uri.split('/').insert(-2, cache_dir, assemble_command(width, height, mode)).join('/')
     end
 
     # Strips resize command from URI. Inverse of +assemble_resize_uri+
     #
     # Arguments:
-    #   resize_uri => /uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+    #   resize_uri => /uploads/photos/1/resized/width=auto&height=640&mode=fit/car.png
     #
     # Returns /uploads/photos/1/car.png
     #
     # NOTE: This method performs no validation
     def disassemble_resize_uri(resize_uri)
       # Take URI:
-      # /uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+      # /uploads/photos/1/resized/width=auto&height=640&mode=fit/car.png
       #
       # Split by separator:
-      # ["", "uploads", "photos", "1", "resized", "width=auto&height=640&pixel_ratio=1&crop=yes", "car.png"]
+      # ["", "uploads", "photos", "1", "resized", "width=auto&height=640&mode=fit", "car.png"]
       #
       sections = resize_uri.split('/')
 
       # Delete PhotoCook directory:
-      # ["", "uploads", "photos", "1", "width=auto&height=640&pixel_ratio=1&crop=yes", "car.png"]
+      # ["", "uploads", "photos", "1", "width=auto&height=640&mode=fit", "car.png"]
       sections.delete_at(-3)
 
       # Delete command string:
@@ -49,7 +49,7 @@ module PhotoCook
     #
     # Arguments:
     #   root       => /application
-    #   resize_uri => /uploads/photos/1/resized/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+    #   resize_uri => /uploads/photos/1/resized/width=auto&height=640&mode=fit/car.png
     #
     # Returns /application/public/uploads/photos/1/car.png
     #
@@ -68,9 +68,9 @@ module PhotoCook
     # Arguments:
     #   root              => /application
     #   source_path       => /application/public/uploads/photos/1/car.png
-    #   assembled_command => width=auto&height=640&pixel_ratio=1&crop=yes
+    #   assembled_command => width=auto&height=640&mode=fit
     #
-    # Returns /application/public/resized/uploads/photos/1/width=auto&height=640&pixel_ratio=1&crop=yes/car.png
+    # Returns /application/public/resized/uploads/photos/1/width=auto&height=640&mode=fit/car.png
     #
     # NOTE: This method performs no validation
     def assemble_store_path(root, source_path, assembled_command)
