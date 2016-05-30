@@ -14,7 +14,7 @@ module PhotoCook
       cache_dir = relative.to_s.split(File::SEPARATOR).find { |el| !(el =~ /\A\.\.?\z/) }
 
       unless Dir.exists?(p1.join(cache_dir))
-        flags = PhotoCook.ln_explicitly_needs_relative_flag? ? '-rs' : '-s'
+        flags = ln_explicitly_needs_relative_flag? ? '-rs' : '-s'
         cmd   = "cd #{p1} && rm -rf #{cache_dir} && ln #{flags} #{relative} #{cache_dir}"
         PhotoCook.notify(:will_symlink_cache_dir, cmd)
         %x{ #{cmd} }

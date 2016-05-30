@@ -51,7 +51,7 @@ module PhotoCook
     logger.write %{ Resize not performed. }
   end
 
-  subscribe :will_symlink_cache_dir do
+  subscribe :will_symlink_cache_dir do |cmd|
     logger.write %{ Will symlink cache directory.
                    Command:       #{cmd} }
   end
