@@ -65,7 +65,14 @@ module PhotoCook
     end
 
     def store(resized_photo, store_path)
-      FileUtils.mkdir_p(File.dirname(store_path))
+      path_to_dir = File.dirname(store_path)
+
+      # Solution to broken symlinks.
+      # This added here because mkdir -p can't detect broken symlinks.
+      if !Dir.exists?(path_to_dir) && File.symlink?(path_to_dir)
+        FileUtils.rm(path_to_dir)
+      end
+      FileUtils.mkdir_p(path_to_dir)
       resized_photo.write(store_path)
       resized_photo.resized_path = store_path
       resized_photo
