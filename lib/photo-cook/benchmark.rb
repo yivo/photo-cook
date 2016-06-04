@@ -1,12 +1,10 @@
 module PhotoCook
-  module Benchmark
+  class << self
     def measure
-      started  = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      started  = Process.clock_gettime(Process::CLOCK_MONOTONIC, :float_millisecond)
       returned = yield
-      finished = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      finished = Process.clock_gettime(Process::CLOCK_MONOTONIC, :float_millisecond)
       [returned, finished - started]
     end
   end
-
-  extend Benchmark
 end
