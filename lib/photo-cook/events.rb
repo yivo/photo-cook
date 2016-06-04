@@ -1,5 +1,5 @@
 module PhotoCook
-  module Events
+  class << self
     def notify(event, *params)
       blocks = @events && @events[event]
       blocks && blocks.each { |blk| call_block_with_floating_arguments(blk, params) }
@@ -18,6 +18,4 @@ module PhotoCook
       callable.call(*resized_args)
     end
   end
-
-  extend Events
 end
