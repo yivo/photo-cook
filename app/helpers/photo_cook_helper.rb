@@ -7,4 +7,8 @@ module PhotoCookHelper
   def resize_multiplier
     PhotoCook::Resize.multiplier
   end
+
+  def photo_cook_cache_key
+    "resize_multiplier:#{resize_multiplier}"
+  end
 end

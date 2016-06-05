@@ -10,21 +10,13 @@ module PhotoCook
         # http://dpi.lv/
         # http://www.canbike.org/CSSpixels/
         def regex
-          @regex ||= %r{
-            \A
-              w=   (?<width>  \d+) &
-              h=   (?<height> \d+) &
-              mode=(?<mode>   fit|fill)
-            \z
-            }x
+          @regex ||= /\A(?<mode>fit|fill)\-(?<width>\d+)x(?<height>\d+)\z/
         end
 
         # NOTE: This method performs no validation
         # NOTE: This method is very hot
         def assemble(width, height, mode)
-           'w='    + width.to_s  +
-          '&h='    + height.to_s +
-          '&mode=' + (mode.kind_of?(Symbol) ? mode.to_s : mode )
+          "#{mode}-#{width}x#{height}"
         end
 
         def extract(resize_uri)

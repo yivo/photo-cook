@@ -45,17 +45,15 @@ module PhotoCook
           symlink_cache_dir(source_path, store_path)
           default_actions(env)
 
-        else
+        elsif File.readable?(source_path)
           # Finally resize photo
           # Resized photo will appear in resize directory
-          photo = Resize.perform(source_path, store_path, command[:width], command[:height], command[:mode])
+          Resize.perform(source_path, store_path, command[:width], command[:height], command[:mode])
+          symlink_cache_dir(source_path, store_path)
+          respond_with_file(env)
 
-          if photo
-            symlink_cache_dir(source_path, store_path)
-            respond_with_file(env)
-          else
-            default_actions(env)
-          end
+        else
+          default_actions(env)
         end
       end
 

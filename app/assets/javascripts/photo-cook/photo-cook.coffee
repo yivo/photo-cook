@@ -9,7 +9,7 @@
           break if value = el.getAttribute('content')
     value or 'resize-cache'
 
-  resizeCommandRegex: /^w=\d+&h=\d+&mode=fit|fill-$/
+  resizeCommandRegex: /^fit|fill\-\d+x\d+$/
 
   # Returns device pixel ratio (float)
   # If no ratio could be determined will return normal ratio (1.0)
@@ -43,9 +43,7 @@
 
   resize: (path, width, height, mode, options) ->
     multiplier = options?.multiplier or PhotoCook.resizeMultiplier
-    command    = 'w='       + Math.floor(width  * multiplier) +
-                 '&h='      + Math.floor(height * multiplier) +
-                 '&mode='   + mode
+    command    = "#{mode or 'fit'}-#{Math.floor(width  * multiplier)}x#{Math.floor(height * multiplier)}"
     pathTokens = path.split('/');
     pathTokens.splice(-1, 0, PhotoCook.resizeCacheDir, command)
     pathTokens.join('/')
