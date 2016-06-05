@@ -10,6 +10,6 @@
 #       uploads
 #         photos
 #           1
-#             width=auto&height=640&pixel_ratio=1&crop=yes
+#             w=640&h=640&mode=fit
 #               car.png
 ```

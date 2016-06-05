@@ -1,6 +1,9 @@
+# frozen_string_literal: true
 module PhotoCook
   module Optimization
-    class ImageOptim < Optimizer
+    class ImageOptim
+      include Singleton
+
       def optimize(path)
         result = image_optim.optimize_image!(path)
         if result.kind_of?(::ImageOptim::ImagePath::Optimized)
@@ -19,7 +22,14 @@ module PhotoCook
           nice: 10,
 
           # Number of threads or disable (defaults to number of processors)
-          threads: nil,
+          threads: begin
+            match = if OS.osx?
+              `sysctl -a | grep machdep.cpu | grep thread_count`
+            else
+              `cat /proc/cpuinfo | grep "cpu cores"`
+            end
+            $~.to_s.to_i if match.to_s =~ /\d{1,2}/
+          end,
 
           # Verbose output (defaults to false)
           verbose: false,
@@ -28,7 +38,7 @@ module PhotoCook
           pack: nil,
 
           # Skip workers with missing or problematic binaries (defaults to false)
-          skip_missing_workers: true,
+          skip_missing_workers: nil,
 
           # Allow lossy workers and optimizations (defaults to false)
           allow_lossy: false,

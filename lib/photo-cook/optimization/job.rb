@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module PhotoCook
   module Optimization
     class Job < ActiveJob::Base
