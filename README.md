@@ -10,6 +10,6 @@
 #       uploads
 #         photos
 #           1
-#             w=640&h=640&mode=fit
+#             fit-640x640
 #               car.png
 ```
