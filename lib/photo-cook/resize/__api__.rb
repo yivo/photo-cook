@@ -63,7 +63,7 @@ module PhotoCook
       if defined?(Rails)
         def static_asset_uri(uri, *rest)
           # If production assets are precompiled and placed into public so we can resize as usually
-          Rails.application.config.serve_static_files ? uri : resize(uri, *rest)
+          Rails.application.config.serve_static_files ? uri : uri(uri, *rest)
         end
       end
 
