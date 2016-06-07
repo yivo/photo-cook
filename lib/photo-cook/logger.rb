@@ -10,7 +10,18 @@ module PhotoCook
         log '--- PhotoCook ---'
         instance_eval(&block)
         log '---'
-      end
+      end if @logging_enabled
+      nil
+    end
+
+    def enable_logging!
+      @logging_enabled = true
+      nil
+    end
+
+    def disable_logging!
+      @logging_enabled = false
+      nil
     end
   end
 
@@ -22,4 +33,5 @@ module PhotoCook
 
   self.logger           = Logger.new(STDOUT)
   self.logger_evaluator = LoggerEvaluator.new
+  enable_logging!
 end
