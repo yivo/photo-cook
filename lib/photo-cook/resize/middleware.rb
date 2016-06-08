@@ -2,6 +2,11 @@
 module PhotoCook
   module Resize
     class Middleware
+      class << self
+        attr_accessor :headers
+      end
+
+      self.headers = { 'Cache-Control' => 'public, max-age=31536000, no-transform' }
 
       def initialize(app)
         @app = app
@@ -19,13 +24,11 @@ module PhotoCook
       def call(env)
         uri = extract_uri(env)
 
-        return default_actions(env) if
+        # Check if URI contains PhotoCook resize indicators
+        return default_action(env) unless Assemble.resize_uri?(uri)
 
-          # Check if URI contains PhotoCook resize indicators
-          Assemble.resize_uri?(uri) == false ||
-
-          # If for some reasons file exists but request went to Ruby app
-          requested_file_exists?(uri)
+        # If resized photo exists but nginx or apache didn't handle this request
+        return respond_with_file(env) if requested_file_exists?(uri)
 
         # At this point we are sure that this request is targeting to resize photo
         PhotoCook.notify('resize:middleware:match', uri)
@@ -41,11 +44,11 @@ module PhotoCook
         #   => /application/public/resized/uploads/photos/1/COMMAND/car.png
         store_path = Assemble.assemble_store_path(root_path, source_path, command.to_s)
 
-        if File.readable?(store_path)
+        if File.file?(store_path) && File.readable?(store_path)
           symlink_cache_dir(source_path, store_path)
-          default_actions(env)
+          respond_with_file(env)
 
-        elsif File.readable?(source_path)
+        elsif File.file?(source_path) && File.readable?(source_path)
           # Finally resize photo
           # Resized photo will appear in resize directory
           Resize.perform(source_path, store_path, command[:width], command[:height], command[:mode])
@@ -53,7 +56,7 @@ module PhotoCook
           respond_with_file(env)
 
         else
-          default_actions(env)
+          default_action(env)
         end
       end
 
@@ -69,14 +72,15 @@ module PhotoCook
       def requested_file_exists?(uri)
         # Check if file exists:
         #   /application/public/uploads/photos/1/resized/width=auto&height=640&mode=fill/car.png
-        File.readable?(File.join(public_path, uri))
+        path = File.join(public_path, uri)
+        File.file?(path) && File.readable?(path)
       end
 
       def extract_uri(env)
         Rack::Utils.clean_path_info(Rack::Utils.unescape(env['PATH_INFO']))
       end
 
-      def default_actions(env)
+      def default_action(env)
         @app.call(env)
       end
 
@@ -84,6 +88,12 @@ module PhotoCook
         # http://rubylogs.com/writing-rails-middleware/
         # https://viget.com/extend/refactoring-patterns-the-rails-middleware-response-handler
         status, headers, body = Rack::File.new(public_path).call(env)
+
+        # Rack::File will set Last-Modified, Content-Type and Content-Length
+        # We will set Cache-Control. This is default behaviour.
+        # This is configurable in PhotoCook::Resize::Middleware.headers
+        headers.merge!(self.class.headers) if status == 200 || status == 304
+
         response = Rack::Response.new(body, status, headers)
         response.finish
       end
