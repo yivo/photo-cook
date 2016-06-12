@@ -25,9 +25,11 @@ module PhotoCook
           outw, outh = Calculations.size_to_fit(*photo[:dimensions], width, height)
           photo.resize "#{PhotoCook::Pixels.to_magick_dimensions(outw, outh)}>"
 
-          photo.resize_mode    = :fit
-          photo.desired_width  = photo.calculated_width  = outw
-          photo.desired_height = photo.calculated_height = outh
+          photo.resize_mode       = :fit
+          photo.desired_width     = width
+          photo.desired_height    = height
+          photo.calculated_width  = outw
+          photo.calculated_height = outh
         end
       end
 
