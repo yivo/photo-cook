@@ -22,6 +22,11 @@ class PhotoCookTest < Test::Unit::TestCase
   def test_size_to_fit
     assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(400,  300,  200,  700),  [200,  150])
     assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(1920, 1200, 2560, 2560), [1920, 1200])
+    assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(2613, 3070, 1280, 1280), [1089, 1280])
+    assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(400,  800,  100, 340),   [100, 200])
+    assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(600,  340,  2000, 2000), [600, 340])
+    assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(600,  340,  400, 100),   [176, 100])
+    assert_same_dimensions(PhotoCook::Resize::Calculations.size_to_fit(600,  340,  400, 400),   [400, 226])
   end
 
   def assert_same_dimensions(d1, d2)

@@ -6,10 +6,10 @@ module PhotoCook
         def size_to_fit(maxw, maxh, reqw, reqh, round = true)
           outw, outh = maxw, maxh
 
-          scale = outw > reqw ? reqw / outw.to_f : 1.0
+          scale = outw > reqw ? reqw / convert(outw) : 1.0
           outw, outh = outw * scale, outh * scale
 
-          scale = outh > reqh ? reqh / outh.to_f : 1.0
+          scale = outh > reqh ? reqh / convert(outh) : 1.0
           outw, outh = outw * scale, outh * scale
 
           round ? [round(outw), round(outh)] : [outw, outh]
@@ -24,7 +24,7 @@ module PhotoCook
               outh = maxh
 
               if outw > maxw
-                outh = (outh * maxw) / outw.to_f
+                outh = (outh * maxw) / convert(outw)
                 outw = maxw
               end
             else
@@ -32,17 +32,17 @@ module PhotoCook
               outh = (maxw * reqh) / reqw
 
               if outh > maxh
-                outw = (outw * maxh) / outh.to_f
+                outw = (outw * maxh) / convert(outh)
                 outh = maxh
               end
             end
 
           elsif reqw > maxw
             outw = maxw
-            outh = (reqh * maxw) / reqw.to_f
+            outh = (reqh * maxw) / convert(reqw)
 
           elsif reqh > maxh
-            outw = (reqw * maxh) / reqh.to_f
+            outw = (reqw * maxh) / convert(reqh)
             outh = maxh
           end
 
@@ -51,6 +51,11 @@ module PhotoCook
 
         def round(x)
           PhotoCook::Pixels.round(x)
+        end
+
+      private
+        def convert(x)
+          x.kind_of?(Float) ? x : x.to_f
         end
       end
     end
