@@ -70,4 +70,21 @@
     # By default check that URL is relative
     !PhotoCook.uriRegex.test(url)
 
+  sizeToFit: (maxw, maxh, reqw, reqh, round) ->
+    outw  = maxw
+    outh  = maxh
+
+    scale = if outw > reqw then reqw / outw else 1.0
+    outw *= scale
+    outh *= scale
+
+    scale = if outh > reqh then reqh / outh else 1.0
+    outw *= scale
+    outh *= scale
+
+    if !round? or round # (null or undefined) OR true-value
+      [Math.floor(outw), Math.floor(outh)]
+    else
+      [outw, outh]
+
 PhotoCook.initialize()
