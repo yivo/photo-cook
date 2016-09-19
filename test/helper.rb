@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module TestHelper
   class << self
     def fixtures_dirpath

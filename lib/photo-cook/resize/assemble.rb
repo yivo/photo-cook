@@ -101,12 +101,23 @@ module PhotoCook
 
           # Check if valid resize command exists:
           #   sections[-2] => width=auto&height=640&mode=fit
-          (sections[-2] =~ Command.regex) == 0
+          matches_regex?(sections[-2], Command.regex)
         end
 
       private
         def dirname_or_blank(path)
           File.dirname(path).sub(/\A\.\z/, '')
+        end
+
+        # Ruby 2.4 Regexp#match?
+        if Regexp.instance_methods.include?(:match?)
+          def matches_regex?(string, regex)
+            regex.match?(string)
+          end
+        else
+          def matches_regex?(string, regex)
+            regex === string
+          end
         end
       end
     end

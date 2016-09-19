@@ -16,4 +16,8 @@ class PhotoCookAssembleTest < Test::Unit::TestCase
     assert_equal('/uploads/dog.png', PhotoCook::Resize.strip('/uploads/resize-cache/fill-300x300/dog.png'))
     assert_equal('/uploads/photos/1/md5/dog.png', PhotoCook::Resize.strip('/uploads/photos/1/md5/resize-cache/fill-300x300/dog.png'))
   end
+
+  def test_is_resize_uri
+    assert_true(PhotoCook::Resize::Assemble.resize_uri?('/uploads/photos/1/resize-cache/fill-300x300/dog.png'))
+  end
 end

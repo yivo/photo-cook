@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require File.expand_path('../lib/photo-cook/version', __FILE__)
 
 Gem::Specification.new do |s|
@@ -6,6 +7,8 @@ Gem::Specification.new do |s|
   s.authors         = ['Yaroslav Konoplov']
   s.email           = ['eahome00@gmail.com']
   s.homepage        = 'http://github.com/yivo/photo-cook'
+
+  # TODO Write better summary and description
   s.summary         = 'Tool for resizing and optimizing photos in Ruby'
   s.description     = 'This gem provides complete tool for resizing and optimizing photos in Ruby'
   s.license         = 'MIT'

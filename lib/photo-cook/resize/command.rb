@@ -10,7 +10,7 @@ module PhotoCook
         # http://dpi.lv/
         # http://www.canbike.org/CSSpixels/
         def regex
-          @regex ||= /\A(?<mode>fit|fill)\-(?<width>\d+)x(?<height>\d+)\z/
+          @regex ||= /\A(?<mode>fit|fill)-(?<width>\d+)x(?<height>\d+)\z/
         end
 
         # NOTE: This method performs no validation
