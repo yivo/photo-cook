@@ -28,7 +28,7 @@ module PhotoCook
 
       # Builds URI which points to PhotoCook::Middleware:
       #   uri('/uploads/car.png', 280, 280)
-      #     => /uploads/resized/width=280&height=280&mode=fit/car.png
+      #     => /uploads/resize-cache/fit-280x280/car.png
       #
       # NOTE: This method will perform validation
       def uri(uri, width, height, mode, options = {})
@@ -36,7 +36,7 @@ module PhotoCook
       end
 
       # Inverse of PhotoCook#resize (see ^):
-      #   strip('/uploads/resized/width=280&height=280&mode=fit/car.png')
+      #   strip('/uploads/resize-cache/fit-280x280/car.png')
       #     => /uploads/car.png
       #
       # NOTE: This method will perform validation
@@ -45,12 +45,24 @@ module PhotoCook
         Assemble.disassemble_resize_uri(uri)
       end
 
+      # TODO Change uri to source_path
       def base64_uri(uri, width, height, mode, options = {})
         w, h, m     = parse_options(width, height, mode, options)
         command     = Command.assemble(w, h, m)
         source_path = Assemble.assemble_source_path_from_normal_uri(PhotoCook.root_path, uri)
         store_path  = Assemble.assemble_store_path(PhotoCook.root_path, source_path, command)
         photo       = if File.readable?(store_path)
+          MagickPhoto.new(store_path)
+        else
+          Resize.perform(source_path, store_path, w, h, m)
+        end
+
+        "data:#{photo.mime_type};base64,#{Base64.strict_encode64(File.read(photo.path))}"
+      end
+
+      def base64_uri_from_source_path(source_path, store_path, width, height, mode, options = {})
+        w, h, m = parse_options(width, height, mode, options)
+        photo   = if File.readable?(store_path)
           MagickPhoto.new(store_path)
         else
           Resize.perform(source_path, store_path, w, h, m)

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # def test_something
 #   def lol(maxw, maxh, w, h)
 #     ary = []
