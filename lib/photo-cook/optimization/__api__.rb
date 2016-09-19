@@ -2,6 +2,7 @@
 module PhotoCook
   module Optimization
     class << self
+      # TODO PhotoCook::Optimization.optimizer = :image_optim
       attr_accessor :optimizer
 
       def perform(path)
