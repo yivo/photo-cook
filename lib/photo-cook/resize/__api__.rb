@@ -32,7 +32,7 @@ module PhotoCook
       #
       # NOTE: This method will perform validation
       def uri(uri, width, height, mode, options = {})
-        Assemble.assemble_resize_uri(uri, *parse_options(width, height, mode, options))
+        Assemble.assemble_resize_uri(uri, *parse_options(width, height, mode, options, false))
       end
 
       # Inverse of PhotoCook#resize (see ^):
@@ -79,13 +79,13 @@ module PhotoCook
         end
       end
 
-      def parse_options(width, height, mode, options)
+      def parse_options(width, height, mode, options, check_pixels_in_bounds = true)
         multiplier  = options.fetch(:multiplier, self.multiplier).to_f
         mode        = Mode.parse!(mode)
         width       = Pixels.round(Pixels.parse(width)  * multiplier)
         height      = Pixels.round(Pixels.parse(height) * multiplier)
-        Pixels.check!(width)
-        Pixels.check!(height)
+        Pixels.check!(width, check_pixels_in_bounds)
+        Pixels.check!(height, check_pixels_in_bounds)
         [width, height, mode]
       end
     end

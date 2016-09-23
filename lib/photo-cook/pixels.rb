@@ -13,10 +13,10 @@ module PhotoCook
         x
       end
 
-      def check!(x)
+      def check!(x, ensure_in_bounds = true)
         x = typecast(x)
         raise Invalid,     x if !x.kind_of?(Integer) && (x.nan? || x.infinite?)
-        raise OutOfBounds, x unless in_bounds?(x)
+        raise OutOfBounds, x if ensure_in_bounds && !in_bounds?(x)
         true
       end
 
