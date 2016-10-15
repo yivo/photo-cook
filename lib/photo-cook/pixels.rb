@@ -54,3 +54,15 @@ module PhotoCook
     end
   end
 end
+
+class Float
+  def round_pixels
+    PhotoCook::Pixels.round(self)
+  end
+end
+
+class Fixnum
+  def round_pixels
+    self
+  end
+end
