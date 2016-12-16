@@ -3,7 +3,7 @@
 
 module PhotoCook
   module Pixels
-    MAX = 4256.freeze
+    MAX = 9999.freeze
 
     class << self
       def parse(x)
