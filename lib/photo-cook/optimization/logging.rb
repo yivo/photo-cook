@@ -1,4 +1,6 @@
+# encoding: utf-8
 # frozen_string_literal: true
+
 PhotoCook.subscribe 'optimization:success' do |path, original_size, new_size, msec|
   PhotoCook.log do
     diff = original_size - new_size

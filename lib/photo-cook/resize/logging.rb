@@ -1,4 +1,6 @@
+# encoding: utf-8
 # frozen_string_literal: true
+
 PhotoCook.subscribe 'resize:middleware:match' do |uri|
   PhotoCook.log do
     log "PhotoCook::Resize::Middleware matched request for photo resize"
