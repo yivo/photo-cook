@@ -9,7 +9,6 @@ require 'pathname'
 require 'logger'
 require 'rake'
 require 'mini_magick'
-require 'os'
 
 module PhotoCook
   class << self

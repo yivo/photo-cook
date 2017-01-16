@@ -24,14 +24,7 @@ module PhotoCook
           nice: 10,
 
           # Number of threads or disable (defaults to number of processors)
-          threads: begin
-            match = if OS.osx?
-              `sysctl -a | grep machdep.cpu | grep thread_count`
-            else
-              `cat /proc/cpuinfo | grep "cpu cores"`
-            end
-            $~.to_s.to_i if match.to_s =~ /\d{1,2}/
-          end,
+          threads: nil,
 
           # Verbose output (defaults to false)
           verbose: false,
@@ -110,16 +103,21 @@ module PhotoCook
             copy_chunks: false,
 
             # Strategy: 0 - xtreme, 1 - intense, 2 - longest Match, 3 - huffman Only, 4 - uncompressed (defaults to 0)
-            strategy: 2
+            strategy: 3
           },
           pngquant: {
+            # Allow quality option (defaults to false)
+            allow_lossy: false,
+
             # min..max - don't save below min, use less colors below max (both in range 0..100; in yaml - !ruby/range 0..100), ignored in default/lossless mode (defaults to 100..100, 0..100 in lossy mode)
             quality: 100..100,
 
             # speed/quality trade-off: 1 - slow, 3 - default, 11 - fast & rough (defaults to 3)
-            speed: 11
+            speed: 10
           },
           svgo: {
+            disable: true,
+
             # List of plugins to disable (defaults to [])
             disable_plugins: [],
 

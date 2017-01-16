@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'rack',        '~> 1.5'
   s.add_dependency 'mini_magick', '~> 4.0'
-  s.add_dependency 'os',          '~> 0.9'
 
   s.add_development_dependency 'bundler', '~> 1.7'
   s.add_development_dependency 'rake',    '~> 10.0'
