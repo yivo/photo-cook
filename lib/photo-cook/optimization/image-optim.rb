@@ -8,7 +8,7 @@ module PhotoCook
 
       def optimize(path)
         result = image_optim.optimize_image!(path)
-        if result.kind_of?(::ImageOptim::ImagePath::Optimized)
+        if result.kind_of?(::ImageOptim::OptimizedPath)
           { before: result.original_size, after: result.size }
         else
           false
