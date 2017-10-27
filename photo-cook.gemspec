@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
   s.test_files      = `git ls-files -z -- {test,spec,features}/*`.split("\x0")
   s.require_paths   = %w( app lib )
 
-  s.add_dependency 'rack',        '~> 1.5'
   s.add_dependency 'mini_magick', '~> 4.0'
 
   s.add_development_dependency 'bundler', '~> 1.7'
